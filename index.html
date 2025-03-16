@@ -171,13 +171,13 @@
       <div v-for="product in filteredAndSearchedProducts" :key="product.SKU" class="product">
         <h3>{{ product.NOMBRE_DEL_PRODUCTO }} {{ product.SABOR ? `- ${product.SABOR}` : '' }}</h3>
         <p><strong>SKU:</strong> {{ product.SKU }}</p>
-        <p><strong>P.V.:</strong> {{ product.PV }}</p>
-        <p><strong>Base de Ganancia:</strong> ${{ product.BASE_DE_GANANCIA }}</p>
-        <p><strong>Precio Sugerido:</strong> ${{ product.PRECIO_DE_VENTA_SUGERIDO }}</p>
-        <p><strong>25%:</strong> ${{ product['0.25'] }}</p>
-        <p><strong>35%:</strong> ${{ product['0.35'] }}</p>
-        <p><strong>42%:</strong> ${{ product['0.42'] }}</p>
-        <p><strong>50%:</strong> ${{ product['0.5'] }}</p>
+        <p><strong>P.V.:</strong> {{ product.PV.toFixed(2) }}</p>
+        <p><strong>Base de Ganancia:</strong> ${{ product.BASE_DE_GANANCIA.toFixed(2) }}</p>
+        <p><strong>Precio Sugerido:</strong> ${{ product.PRECIO_DE_VENTA_SUGERIDO.toFixed(2) }}</p>
+        <p><strong>25%:</strong> ${{ product['0.25'].toFixed(2) }}</p>
+        <p><strong>35%:</strong> ${{ product['0.35'].toFixed(2) }}</p>
+        <p><strong>42%:</strong> ${{ product['0.42'].toFixed(2) }}</p>
+        <p><strong>50%:</strong> ${{ product['0.50'].toFixed(2) }}</p>
         <p><strong>Categoría:</strong> {{ product.CATEGORIA }}</p>
         <input type="number" v-model.number="product.quantity" min="0" @input="updateSummary" placeholder="Cantidad">
       </div>
@@ -253,27 +253,39 @@
           return this.selectedItems.reduce((sum, item) => sum + (item.quantity * item['0.42']), 0);
         },
         total050() {
-          return this.selectedItems.reduce((sum, item) => sum + (item.quantity * item['0.5']), 0);
+          return this.selectedItems.reduce((sum, item) => sum + (item.quantity * item['0.50']), 0);
         }
       },
       methods: {
         toggleProducts() {
-          this.productsVisible = true; // Asegurar que los productos sean visibles al cambiar categoría
+          this.productsVisible = true;
         },
         searchAndClear() {
-          this.searchQuery = ''; // Limpiar el campo después de buscar
+          this.searchQuery = '';
         },
         updateSummary() {
-          // No necesitamos guardar en localStorage ni hacer otras acciones, solo actualizar el resumen
+          // No se necesita guardar en localStorage, solo actualizar el resumen
         },
         async loadProductsFromJSON() {
           try {
             const response = await fetch('products.json');
+            if (!response.ok) throw new Error('No se pudo cargar products.json');
             const data = await response.json();
             this.products = data.map(product => ({
-              ...product,
-              quantity: 0 // Inicializar quantity en 0
+              SKU: product.SKU || '',
+              NOMBRE_DEL_PRODUCTO: product.NOMBRE_DEL_PRODUCTO || '',
+              SABOR: product.SABOR || '',
+              PV: parseFloat(product.PV) || 0,
+              BASE_DE_GANANCIA: parseFloat(product.BASE_DE_GANANCIA) || 0,
+              PRECIO_DE_VENTA_SUGERIDO: parseFloat(product.PRECIO_DE_VENTA_SUGERIDO) || 0,
+              '0.25': parseFloat(product['0.25']) || 0,
+              '0.35': parseFloat(product['0.35']) || 0,
+              '0.42': parseFloat(product['0.42']) || 0,
+              '0.50': parseFloat(product['0.50']) || 0, // Usar '0.50' como clave
+              CATEGORIA: product.CATEGORIA || 'BATIDOS',
+              quantity: product.quantity || 0
             }));
+            console.log('Productos cargados:', this.products); // Para depuración
           } catch (error) {
             console.error("Error al cargar products.json:", error);
           }
