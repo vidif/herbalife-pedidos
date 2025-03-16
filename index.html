@@ -360,30 +360,32 @@
     }
 
     @media print {
+      body {
+        display: block; /* Asegurar que el body sea visible */
+      }
       body * {
-        visibility: hidden;
+        display: none; /* Ocultar todo excepto el modal */
       }
       .modal,
       .modal-content {
-        visibility: visible;
-        position: absolute;
-        left: 0;
-        top: 0;
+        display: block !important; /* Forzar que el modal se muestre */
+        position: static; /* Quitar posición fija para impresión */
         width: 100%;
         height: auto;
-        display: block !important; /* Asegurar que el modal se muestre */
+        padding: 0;
+        background-color: #fff;
+        box-shadow: none;
+        max-height: none;
+        overflow: visible;
       }
       .modal-content * {
-        visibility: visible;
+        display: block !important; /* Asegurar que todo dentro del modal se muestre */
       }
       .modal-buttons {
         display: none;
       }
-      .modal-content {
-        box-shadow: none; /* Eliminar sombra en impresión */
-        padding: 20px;
-        max-height: none; /* Permitir que el contenido se extienda */
-        overflow: visible; /* Evitar recorte */
+      .close-modal {
+        display: none;
       }
     }
 
@@ -713,9 +715,12 @@
           });
         },
         printModal() {
-          console.log('Imprimiendo resumen:', this.selectedProducts, 'Total PV:', this.totalPV); // Depuración
-          this.updateSummary(); // Forzar actualización del DOM
-          window.print();
+          console.log('Iniciando impresión, selectedProducts:', this.selectedProducts, 'Total PV:', this.totalPV); // Depuración
+          this.showModal = true; // Asegurar que el modal esté abierto
+          this.$nextTick(() => { // Esperar a que el DOM se actualice
+            console.log('DOM actualizado, iniciando impresión'); // Depuración
+            window.print();
+          });
         },
         handleBeforeUnload(event) {
           if (this.selectedProductSKUs.length > 0) {
