@@ -461,7 +461,11 @@
         },
         downloadPDF() {
           console.log('Intentando descargar PDF...');
-          const modalContent = this.$el.querySelector('.modal-content');
+          if (!this.showModal) {
+            console.error('El modal no está abierto. Abre el modal antes de intentar descargar el PDF.');
+            return;
+          }
+          const modalContent = document.querySelector('.modal-content');
           if (!modalContent) {
             console.error('No se encontró el elemento .modal-content');
             return;
