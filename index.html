@@ -75,6 +75,27 @@
       display: block;
     }
 
+    .clear-search-btn {
+      display: block;
+      margin: 5px auto 0;
+      padding: 5px 10px;
+      background-color: #003087;
+      color: #ffffff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9em;
+      display: none;
+    }
+
+    .clear-search-btn.visible {
+      display: block;
+    }
+
+    .clear-search-btn:hover {
+      background-color: #d4a017;
+    }
+
     .categories {
       margin-bottom: 20px;
     }
@@ -290,6 +311,7 @@
     <div class="search-container">
       <input v-model="searchQuery" type="text" class="search-bar" placeholder="Buscar por nombre de producto..." @keyup.enter="searchAndClear">
       <button v-if="searchQuery" class="clear-search visible" @click="clearSearch">×</button>
+      <button v-if="searchQuery" class="clear-search-btn visible" @click="clearSearch">Limpiar Búsqueda</button>
     </div>
     <div class="categories">
       <select v-model="selectedCategory" class="category-select" @change="toggleProductsAndClearSearch">
@@ -388,22 +410,29 @@
           return [...new Set(this.products.map(product => product.CATEGORIA))];
         },
         filteredAndSearchedProducts() {
-          let filteredProducts = this.products;
+          let categoryProducts = this.products.filter(product =>
+            product.CATEGORIA === this.selectedCategory
+          );
 
-          if (this.searchQuery) {
-            const searchTerm = this.removeAccents(this.searchQuery.toLowerCase().trim());
-            filteredProducts = this.products.filter(product => {
-              const fullName = `${product.NOMBRE_DEL_PRODUCTO} ${product.SABOR || ''}`;
-              const normalizedFullName = this.removeAccents(fullName.toLowerCase());
-              return normalizedFullName.includes(searchTerm);
-            });
-          } else {
-            filteredProducts = this.products.filter(product =>
-              product.CATEGORIA === this.selectedCategory
-            );
+          if (!this.searchQuery) {
+            return categoryProducts; // Si no hay búsqueda, mostrar solo los productos de la categoría
           }
 
-          return filteredProducts;
+          const searchTerm = this.removeAccents(this.searchQuery.toLowerCase().trim());
+          // Filtrar productos que coincidan con la búsqueda dentro de la categoría seleccionada
+          const searchResults = categoryProducts.filter(product => {
+            const fullName = `${product.NOMBRE_DEL_PRODUCTO} ${product.SABOR || ''}`;
+            const normalizedFullName = this.removeAccents(fullName.toLowerCase());
+            return normalizedFullName.includes(searchTerm);
+          });
+
+          // Crear una lista de productos de la categoría excluyendo los que ya están en los resultados de búsqueda
+          const remainingCategoryProducts = categoryProducts.filter(product => 
+            !searchResults.includes(product)
+          );
+
+          // Combinar los resultados de búsqueda al principio y los productos restantes de la categoría al final
+          return [...searchResults, ...remainingCategoryProducts];
         },
         selectedItems() {
           return this.products.filter(product => product.quantity > 0);
@@ -442,7 +471,7 @@
           this.searchQuery = '';
         },
         clearSearch() {
-          this.searchQuery = ''; // Borra la búsqueda al hacer clic en la "X"
+          this.searchQuery = ''; // Borra la búsqueda al hacer clic en la "X" o en el botón
         },
         updateSummary() {
           this.products = [...this.products]; // Actualiza la lista de productos
