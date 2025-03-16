@@ -44,29 +44,6 @@
       font-weight: 500;
     }
 
-    .tabs {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      margin-bottom: 20px;
-    }
-
-    .tab {
-      padding: 12px 25px;
-      background-color: #e9ecef;
-      border: 2px solid #003087;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      color: #003087;
-      font-weight: 500;
-    }
-
-    .tab:hover, .tab.active {
-      background-color: #003087;
-      color: #ffffff;
-    }
-
     .search-bar {
       width: 100%;
       padding: 10px;
@@ -102,12 +79,11 @@
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 20px;
       margin-bottom: 20px;
-      /* Eliminamos max-height para permitir desplazamiento completo */
       overflow-y: auto;
     }
 
     .products.active {
-      display: grid; /* Aseguramos que siempre se muestre como grid */
+      display: grid;
     }
 
     .product {
@@ -167,76 +143,11 @@
       color: #555;
     }
 
-    .admin-login, .admin-form {
-      background-color: #e9ecef;
-      padding: 20px;
-      border-radius: 8px;
-      border: 1px solid #003087;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-      margin-bottom: 20px;
-    }
-
-    .admin-login input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 15px;
-      background-color: #ffffff;
-      color: #333;
-      border: 1px solid #003087;
-      border-radius: 5px;
-    }
-
-    .admin-login button {
-      padding: 10px 20px;
-      background-color: #d4a017;
-      color: #ffffff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-
-    .admin-login button:hover {
-      background-color: #b78c0f;
-    }
-
-    .admin-form label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: 500;
-      color: #003087;
-    }
-
-    .admin-form input, .admin-form select {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 15px;
-      background-color: #ffffff;
-      color: #333;
-      border: 1px solid #003087;
-      border-radius: 5px;
-    }
-
-    .admin-form button {
-      padding: 10px 20px;
-      background-color: #d4a017;
-      color: #ffffff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-      margin-right: 10px;
-    }
-
-    .admin-form button:hover {
-      background-color: #b78c0f;
-    }
-
     @media (max-width: 768px) {
       .products {
         grid-template-columns: 1fr;
-        max-height: none; /* Eliminamos restricciones de altura en móvil */
-        overflow-y: visible; /* Permitimos desplazamiento natural */
+        max-height: none;
+        overflow-y: visible;
       }
 
       h1 {
@@ -250,115 +161,42 @@
     <h1>Simulador de Pedidos Herbalife</h1>
     <div class="pv-total">Total P.V.: {{ totalPV.toFixed(2) }} P.V.</div>
 
-    <!-- Pestañas para cambiar entre Pedidos y Admin -->
-    <div class="tabs">
-      <div class="tab" :class="{ active: view === 'pedidos' }" @click="view = 'pedidos'; clearSearch()">Pedidos</div>
-      <div class="tab" :class="{ active: view === 'admin' || view === 'login' }" @click="showLogin">Admin</div>
+    <input v-model="searchQuery" type="text" class="search-bar" placeholder="Buscar por nombre de producto..." @keyup.enter="searchAndClear">
+    <div class="categories">
+      <select v-model="selectedCategory" class="category-select" @change="toggleProducts">
+        <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
+      </select>
     </div>
-
-    <!-- Vista de Pedidos -->
-    <div v-if="view === 'pedidos'">
-      <input v-model="searchQuery" type="text" class="search-bar" placeholder="Buscar por nombre de producto..." @keyup.enter="searchAndClear">
-      <div class="categories">
-        <select v-model="selectedCategory" class="category-select" @change="toggleProducts">
-          <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
-        </select>
-      </div>
-      <div class="products" :class="{ active: productsVisible }">
-        <div v-for="product in filteredAndSearchedProducts" :key="product.SKU" class="product">
-          <h3>{{ product.NOMBRE_DEL_PRODUCTO }} {{ product.SABOR ? `- ${product.SABOR}` : '' }}</h3>
-          <p><strong>SKU:</strong> {{ product.SKU }}</p>
-          <p><strong>P.V.:</strong> {{ product.PV }}</p>
-          <p><strong>Base de Ganancia:</strong> ${{ product.BASE_DE_GANANCIA }}</p>
-          <p><strong>Precio Sugerido:</strong> ${{ product.PRECIO_DE_VENTA_SUGERIDO }}</p>
-          <p><strong>25%:</strong> ${{ product['0.25'] }}</p>
-          <p><strong>35%:</strong> ${{ product['0.35'] }}</p>
-          <p><strong>42%:</strong> ${{ product['0.42'] }}</p>
-          <p><strong>50%:</strong> ${{ product['0.5'] }}</p>
-          <p><strong>Categoría:</strong> {{ product.CATEGORIA }}</p>
-          <input type="number" v-model.number="product.quantity" min="0" @input="updateSummary" placeholder="Cantidad">
-        </div>
-      </div>
-
-      <div class="summary">
-        <h2>Resumen del Pedido</h2>
-        <div v-for="item in selectedItems" :key="item.SKU">
-          <p>{{ item.NOMBRE_DEL_PRODUCTO }} ({{ item.SABOR ? item.SABOR : 'Sin sabor' }}) - Cantidad: {{ item.quantity }}</p>
-          <p>P.V. Total: {{ (item.quantity * item.PV).toFixed(2) }}</p>
-        </div>
-        <h3>Totales:</h3>
-        <p><strong>Puntos de Volumen Total:</strong> {{ totalPV.toFixed(2) }} P.V.</p>
-        <p><strong>Total Base de Ganancia:</strong> ${{ totalBase.toFixed(2) }}</p>
-        <p><strong>Total Precio Sugerido:</strong> ${{ totalSuggested.toFixed(2) }}</p>
-        <p><strong>Total 25%:</strong> ${{ total025.toFixed(2) }}</p>
-        <p><strong>Total 35%:</strong> ${{ total035.toFixed(2) }}</p>
-        <p><strong>Total 42%:</strong> ${{ total042.toFixed(2) }}</p>
-        <p><strong>Total 50%:</strong> ${{ total050.toFixed(2) }}</p>
+    <div class="products" :class="{ active: productsVisible }">
+      <div v-for="product in filteredAndSearchedProducts" :key="product.SKU" class="product">
+        <h3>{{ product.NOMBRE_DEL_PRODUCTO }} {{ product.SABOR ? `- ${product.SABOR}` : '' }}</h3>
+        <p><strong>SKU:</strong> {{ product.SKU }}</p>
+        <p><strong>P.V.:</strong> {{ product.PV }}</p>
+        <p><strong>Base de Ganancia:</strong> ${{ product.BASE_DE_GANANCIA }}</p>
+        <p><strong>Precio Sugerido:</strong> ${{ product.PRECIO_DE_VENTA_SUGERIDO }}</p>
+        <p><strong>25%:</strong> ${{ product['0.25'] }}</p>
+        <p><strong>35%:</strong> ${{ product['0.35'] }}</p>
+        <p><strong>42%:</strong> ${{ product['0.42'] }}</p>
+        <p><strong>50%:</strong> ${{ product['0.5'] }}</p>
+        <p><strong>Categoría:</strong> {{ product.CATEGORIA }}</p>
+        <input type="number" v-model.number="product.quantity" min="0" @input="updateSummary" placeholder="Cantidad">
       </div>
     </div>
 
-    <!-- Login para Admin -->
-    <div v-if="view === 'login'" class="admin-login">
-      <h2>Iniciar Sesión en Admin</h2>
-      <input v-model="adminPassword" type="password" placeholder="Clave" @keyup.enter="checkPassword">
-      <button @click="checkPassword">Iniciar Sesión</button>
-    </div>
-
-    <!-- Vista de Admin -->
-    <div v-if="view === 'admin'">
-      <input v-model="adminSearchQuery" type="text" class="search-bar" placeholder="Buscar por nombre de producto..." @keyup.enter="searchAndClearAdmin">
-      <div class="categories">
-        <select v-model="selectedAdminCategory" class="category-select" @change="toggleAdminProducts">
-          <option value="">Todas las categorías</option>
-          <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
-        </select>
+    <div class="summary">
+      <h2>Resumen del Pedido</h2>
+      <div v-for="item in selectedItems" :key="item.SKU">
+        <p>{{ item.NOMBRE_DEL_PRODUCTO }} ({{ item.SABOR ? item.SABOR : 'Sin sabor' }}) - Cantidad: {{ item.quantity }}</p>
+        <p>P.V. Total: {{ (item.quantity * item.PV).toFixed(2) }}</p>
       </div>
-      <div class="admin-form">
-        <h2>{{ editingProduct ? 'Editar Producto' : 'Agregar Producto' }}</h2>
-        <label>Código SKU:</label>
-        <input v-model="newProduct.SKU" placeholder="Código SKU" required>
-        <label>Nombre del Producto:</label>
-        <input v-model="newProduct.NOMBRE_DEL_PRODUCTO" placeholder="Nombre del Producto" required>
-        <label>Sabor (opcional):</label>
-        <input v-model="newProduct.SABOR" placeholder="Sabor (opcional)">
-        <label>Puntos de Volumen (P.V.):</label>
-        <input v-model.number="newProduct.PV" type="number" step="0.01" placeholder="Puntos de Volumen (P.V.)" required>
-        <label>Base de Ganancia ($):</label>
-        <input v-model.number="newProduct.BASE_DE_GANANCIA" type="number" step="0.01" placeholder="Base de Ganancia ($)" required>
-        <label>Precio de Venta Sugerido ($):</label>
-        <input v-model.number="newProduct.PRECIO_DE_VENTA_SUGERIDO" type="number" step="0.01" placeholder="Precio de Venta Sugerido ($)" required>
-        <label>Precio con 25% de Descuento ($):</label>
-        <input v-model.number="newProduct['0.25']" type="number" step="0.01" placeholder="Precio con 25% de descuento ($)" required>
-        <label>Precio con 35% de Descuento ($):</label>
-        <input v-model.number="newProduct['0.35']" type="number" step="0.01" placeholder="Precio con 35% de descuento ($)" required>
-        <label>Precio con 42% de Descuento ($):</label>
-        <input v-model.number="newProduct['0.42']" type="number" step="0.01" placeholder="Precio con 42% de descuento ($)" required>
-        <label>Precio con 50% de Descuento ($):</label>
-        <input v-model.number="newProduct['0.5']" type="number" step="0.01" placeholder="Precio con 50% de descuento ($)" required>
-        <label>Categoría:</label>
-        <select v-model="newProduct.CATEGORIA" required>
-          <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
-        </select>
-        <button @click="saveProduct">{{ editingProduct ? 'Guardar Cambios' : 'Agregar Producto' }}</button>
-        <button v-if="editingProduct" @click="cancelEdit">Cancelar</button>
-      </div>
-
-      <div class="products" :class="{ active: adminProductsVisible }">
-        <div v-for="product in filteredAndSearchedAdminProducts" :key="product.SKU" class="product">
-          <h3>{{ product.NOMBRE_DEL_PRODUCTO }} - {{ product.SABOR ? product.SABOR : 'Sin sabor' }}</h3>
-          <p><strong>SKU:</strong> {{ product.SKU }}</p>
-          <p><strong>P.V.:</strong> {{ product.PV }}</p>
-          <p><strong>Base de Ganancia:</strong> ${{ product.BASE_DE_GANANCIA }}</p>
-          <p><strong>Precio Sugerido:</strong> ${{ product.PRECIO_DE_VENTA_SUGERIDO }}</p>
-          <p><strong>25%:</strong> ${{ product['0.25'] }}</p>
-          <p><strong>35%:</strong> ${{ product['0.35'] }}</p>
-          <p><strong>42%:</strong> ${{ product['0.42'] }}</p>
-          <p><strong>50%:</strong> ${{ product['0.5'] }}</p>
-          <p><strong>Categoría:</strong> {{ product.CATEGORIA }}</p>
-          <button @click="editProduct(product)">Editar</button>
-          <button @click="deleteProduct(product.SKU)">Eliminar</button>
-        </div>
-      </div>
+      <h3>Totales:</h3>
+      <p><strong>Puntos de Volumen Total:</strong> {{ totalPV.toFixed(2) }} P.V.</p>
+      <p><strong>Total Base de Ganancia:</strong> ${{ totalBase.toFixed(2) }}</p>
+      <p><strong>Total Precio Sugerido:</strong> ${{ totalSuggested.toFixed(2) }}</p>
+      <p><strong>Total 25%:</strong> ${{ total025.toFixed(2) }}</p>
+      <p><strong>Total 35%:</strong> ${{ total035.toFixed(2) }}</p>
+      <p><strong>Total 42%:</strong> ${{ total042.toFixed(2) }}</p>
+      <p><strong>Total 50%:</strong> ${{ total050.toFixed(2) }}</p>
     </div>
   </div>
 
@@ -368,125 +206,10 @@
     createApp({
       data() {
         return {
-          view: 'pedidos',
           selectedCategory: 'BATIDOS',
-          selectedAdminCategory: '',
           searchQuery: '',
-          adminSearchQuery: '',
-          productsVisible: true, // Por defecto visible para evitar problemas iniciales
-          adminProductsVisible: true,
-          adminPassword: '',
-          correctPassword: 'saac',
-          newProduct: {
-            SKU: '',
-            NOMBRE_DEL_PRODUCTO: '',
-            SABOR: '',
-            PV: 0,
-            BASE_DE_GANANCIA: 0,
-            PRECIO_DE_VENTA_SUGERIDO: 0,
-            '0.25': 0,
-            '0.35': 0,
-            '0.42': 0,
-            '0.5': 0,
-            CATEGORIA: 'BATIDOS',
-            quantity: 0
-          },
-          editingProduct: null,
-          products: [
-            { SKU: '030K', NOMBRE_DEL_PRODUCTO: 'Herbalife Número 1', SABOR: 'Arroz con leche', PV: 25.75, BASE_DE_GANANCIA: 658.22, PRECIO_DE_VENTA_SUGERIDO: 857, '0.25': 665.6, '0.35': 589.24, '0.42': 535.8, '0.5': 474.71, CATEGORIA: 'BATIDOS', quantity: 0 },
-            { SKU: '049K', NOMBRE_DEL_PRODUCTO: 'Herbalife Número 1', SABOR: 'Coco', PV: 25.75, BASE_DE_GANANCIA: 658.22, PRECIO_DE_VENTA_SUGERIDO: 857, '0.25': 665.6, '0.35': 589.24, '0.42': 535.8, '0.5': 474.71, CATEGORIA: 'BATIDOS', quantity: 0 },
-            { SKU: '884', NOMBRE_DEL_PRODUCTO: 'Herbalife Número 1', SABOR: 'Choco Avellana', PV: 25.75, BASE_DE_GANANCIA: 658.22, PRECIO_DE_VENTA_SUGERIDO: 857, '0.25': 665.6, '0.35': 589.24, '0.42': 535.8, '0.5': 474.71, CATEGORIA: 'BATIDOS', quantity: 0 },
-            { SKU: '2555', NOMBRE_DEL_PRODUCTO: 'Herbalife Número 1', SABOR: 'Plátano', PV: 25.75, BASE_DE_GANANCIA: 658.22, PRECIO_DE_VENTA_SUGERIDO: 857, '0.25': 665.6, '0.35': 589.24, '0.42': 535.8, '0.5': 474.71, CATEGORIA: 'BATIDOS', quantity: 0 },
-            { SKU: '2057', NOMBRE_DEL_PRODUCTO: 'Herbalife Número 1', SABOR: 'Vainilla', PV: 25.75, BASE_DE_GANANCIA: 658.22, PRECIO_DE_VENTA_SUGERIDO: 857, '0.25': 665.6, '0.35': 589.24, '0.42': 535.8, '0.5': 474.71, CATEGORIA: 'BATIDOS', quantity: 0 },
-            { SKU: '2059', NOMBRE_DEL_PRODUCTO: 'Herbalife Número 1', SABOR: 'Fresa', PV: 25.75, BASE_DE_GANANCIA: 658.22, PRECIO_DE_VENTA_SUGERIDO: 857, '0.25': 665.6, '0.35': 589.24, '0.42': 535.8, '0.5': 474.71, CATEGORIA: 'BATIDOS', quantity: 0 },
-            { SKU: '2158', NOMBRE_DEL_PRODUCTO: 'Herbalife Número 1', SABOR: 'Piña Colada', PV: 25.75, BASE_DE_GANANCIA: 658.22, PRECIO_DE_VENTA_SUGERIDO: 857, '0.25': 665.6, '0.35': 589.24, '0.42': 535.8, '0.5': 474.71, CATEGORIA: 'BATIDOS', quantity: 0 },
-            { SKU: '2060', NOMBRE_DEL_PRODUCTO: 'Herbalife Número 1', SABOR: 'Cookies S Cream', PV: 25.75, BASE_DE_GANANCIA: 658.22, PRECIO_DE_VENTA_SUGERIDO: 857, '0.25': 665.6, '0.35': 589.24, '0.42': 535.8, '0.5': 474.71, CATEGORIA: 'BATIDOS', quantity: 0 },
-            { SKU: '2154', NOMBRE_DEL_PRODUCTO: 'Herbalife Número 1', SABOR: 'Frutas Tropicales', PV: 25.75, BASE_DE_GANANCIA: 658.22, PRECIO_DE_VENTA_SUGERIDO: 857, '0.25': 665.6, '0.35': 589.24, '0.42': 535.8, '0.5': 474.71, CATEGORIA: 'BATIDOS', quantity: 0 },
-            { SKU: '2056', NOMBRE_DEL_PRODUCTO: 'Herbalife Número 1', SABOR: 'Dulce de Leche', PV: 25.75, BASE_DE_GANANCIA: 658.22, PRECIO_DE_VENTA_SUGERIDO: 857, '0.25': 665.6, '0.35': 589.24, '0.42': 535.8, '0.5': 474.71, CATEGORIA: 'BATIDOS', quantity: 0 },
-            { SKU: '6', NOMBRE_DEL_PRODUCTO: 'Herbal Aloe Concentrado', SABOR: '473 ml Original', PV: 24.95, BASE_DE_GANANCIA: 478.58, PRECIO_DE_VENTA_SUGERIDO: 616, '0.25': 476.62, '0.35': 421.1, '0.42': 382.24, '0.5': 337.83, CATEGORIA: 'BEBIDAS DE ALOE', quantity: 0 },
-            { SKU: '1065', NOMBRE_DEL_PRODUCTO: 'Herbal Aloe Concentrado', SABOR: '473 ml Mango', PV: 24.95, BASE_DE_GANANCIA: 478.58, PRECIO_DE_VENTA_SUGERIDO: 616, '0.25': 476.62, '0.35': 421.1, '0.42': 382.24, '0.5': 337.83, CATEGORIA: 'BEBIDAS DE ALOE', quantity: 0 },
-            { SKU: '2631', NOMBRE_DEL_PRODUCTO: 'Herbal Aloe Concentrado', SABOR: '473 ml Mandarina', PV: 24.95, BASE_DE_GANANCIA: 478.58, PRECIO_DE_VENTA_SUGERIDO: 616, '0.25': 476.62, '0.35': 421.1, '0.42': 382.24, '0.5': 337.83, CATEGORIA: 'BEBIDAS DE ALOE', quantity: 0 },
-            { SKU: '1610', NOMBRE_DEL_PRODUCTO: 'Herbal Aloe Concentrado', SABOR: '473 ml Uva', PV: 24.95, BASE_DE_GANANCIA: 478.58, PRECIO_DE_VENTA_SUGERIDO: 616, '0.25': 476.62, '0.35': 421.1, '0.42': 382.24, '0.5': 337.83, CATEGORIA: 'BEBIDAS DE ALOE', quantity: 0 },
-            { SKU: '1188', NOMBRE_DEL_PRODUCTO: 'Herbal Aloe Concentrado', SABOR: '1.892 L Mango', PV: 92.55, BASE_DE_GANANCIA: 1731.26, PRECIO_DE_VENTA_SUGERIDO: 2227, '0.25': 1724.15, '0.35': 1523.32, '0.42': 1382.74, '0.5': 1222.08, CATEGORIA: 'BEBIDAS DE ALOE', quantity: 0 },
-            { SKU: '214M', NOMBRE_DEL_PRODUCTO: 'Beverage Enhancers Drink Mix', SABOR: '124 g Sandía', PV: 5.45, BASE_DE_GANANCIA: 113.02, PRECIO_DE_VENTA_SUGERIDO: 255, '0.25': 221.8, '0.35': 208.69, '0.42': 199.51, '0.5': 189.02, CATEGORIA: 'BEVERAGE ENHANCERS', quantity: 0 },
-            { SKU: '203M', NOMBRE_DEL_PRODUCTO: 'Beverage Enhancers Drink Mix', SABOR: '124 g Piña', PV: 5.45, BASE_DE_GANANCIA: 113.02, PRECIO_DE_VENTA_SUGERIDO: 219, '0.25': 185.73, '0.35': 172.62, '0.42': 163.45, '0.5': 152.96, CATEGORIA: 'BEVERAGE ENHANCERS', quantity: 0 },
-            { SKU: '177M', NOMBRE_DEL_PRODUCTO: 'Beverage Enhancers Drink Mix', SABOR: '124 g Explosión Azul', PV: 5.45, BASE_DE_GANANCIA: 113.02, PRECIO_DE_VENTA_SUGERIDO: 219, '0.25': 185.73, '0.35': 172.62, '0.42': 163.45, '0.5': 152.96, CATEGORIA: 'BEVERAGE ENHANCERS', quantity: 0 },
-            { SKU: '282M', NOMBRE_DEL_PRODUCTO: 'Beverage Enhancers Creamy Flavoring Mix', SABOR: '259 g Pastel de Queso', PV: 10.7, BASE_DE_GANANCIA: 211.53, PRECIO_DE_VENTA_SUGERIDO: 443, '0.25': 381.52, '0.35': 356.98, '0.42': 339.8, '0.5': 320.17, CATEGORIA: 'BEVERAGE ENHANCERS', quantity: 0 },
-            { SKU: '426M', NOMBRE_DEL_PRODUCTO: 'Beverage Enhancers Dry Flavoring Syrup Mix', SABOR: '259 g Caramelo', PV: 12.1, BASE_DE_GANANCIA: 239.18, PRECIO_DE_VENTA_SUGERIDO: 528, '0.25': 457.65, '0.35': 429.9, '0.42': 410.48, '0.5': 388.29, CATEGORIA: 'BEVERAGE ENHANCERS', quantity: 0 },
-            { SKU: '208K', NOMBRE_DEL_PRODUCTO: 'LIFTOFF', SABOR: 'Granada', PV: 40.25, BASE_DE_GANANCIA: 786.12, PRECIO_DE_VENTA_SUGERIDO: 1301, '0.25': 1015.74, '0.35': 901.75, '0.42': 821.96, '0.5': 730.77, CATEGORIA: 'BEBIDA ADICIONADA CON CAFEÍNA', quantity: 0 },
-            { SKU: '205K', NOMBRE_DEL_PRODUCTO: 'LIFTOFF', SABOR: 'Naranja', PV: 40.25, BASE_DE_GANANCIA: 786.12, PRECIO_DE_VENTA_SUGERIDO: 1301, '0.25': 1015.74, '0.35': 901.75, '0.42': 821.96, '0.5': 730.77, CATEGORIA: 'BEBIDA ADICIONADA CON CAFEÍNA', quantity: 0 },
-            { SKU: '207K', NOMBRE_DEL_PRODUCTO: 'LIFTOFF', SABOR: 'Frutas Tropicales', PV: 40.25, BASE_DE_GANANCIA: 786.12, PRECIO_DE_VENTA_SUGERIDO: 1301, '0.25': 1015.74, '0.35': 901.75, '0.42': 821.96, '0.5': 730.77, CATEGORIA: 'BEBIDA ADICIONADA CON CAFEÍNA', quantity: 0 },
-            { SKU: '044K', NOMBRE_DEL_PRODUCTO: 'Infusión Herbal', SABOR: '48 g Menta', PV: 32.0, BASE_DE_GANANCIA: 703.52, PRECIO_DE_VENTA_SUGERIDO: 921, '0.25': 716.39, '0.35': 634.78, '0.42': 577.66, '0.5': 512.37, CATEGORIA: 'TÉS', quantity: 0 },
-            { SKU: '964', NOMBRE_DEL_PRODUCTO: 'Thermojetics Concentrado de Hierbas', SABOR: '102 g Original', PV: 34.95, BASE_DE_GANANCIA: 786.2, PRECIO_DE_VENTA_SUGERIDO: 872, '0.25': 674.97, '0.35': 596.35, '0.42': 541.32, '0.5': 478.42, CATEGORIA: 'TÉS', quantity: 0 },
-            { SKU: '963', NOMBRE_DEL_PRODUCTO: 'Thermojetics Concentrado de Hierbas', SABOR: '51 g Original', PV: 19.95, BASE_DE_GANANCIA: 430.06, PRECIO_DE_VENTA_SUGERIDO: 477, '0.25': 369.22, '0.35': 326.21, '0.42': 296.1, '0.5': 261.7, CATEGORIA: 'TÉS', quantity: 0 },
-            { SKU: '1638', NOMBRE_DEL_PRODUCTO: 'Thermojetics Concentrado de Hierbas', SABOR: '51 g Chai', PV: 19.95, BASE_DE_GANANCIA: 430.06, PRECIO_DE_VENTA_SUGERIDO: 477, '0.25': 369.22, '0.35': 326.21, '0.42': 296.1, '0.5': 261.7, CATEGORIA: 'TÉS', quantity: 0 },
-            { SKU: '922', NOMBRE_DEL_PRODUCTO: 'Thermojetics Concentrado de Hierbas', SABOR: '51 g Limón', PV: 19.95, BASE_DE_GANANCIA: 430.06, PRECIO_DE_VENTA_SUGERIDO: 477, '0.25': 369.22, '0.35': 326.21, '0.42': 296.1, '0.5': 261.7, CATEGORIA: 'TÉS', quantity: 0 },
-            { SKU: '1428', NOMBRE_DEL_PRODUCTO: 'Té Verde', SABOR: '48 g Granada', PV: 28.25, BASE_DE_GANANCIA: 668.27, PRECIO_DE_VENTA_SUGERIDO: 741, '0.25': 573.74, '0.35': 506.92, '0.42': 460.14, '0.5': 406.68, CATEGORIA: 'TÉS', quantity: 0 },
-            { SKU: '85', NOMBRE_DEL_PRODUCTO: 'N-R-G Té', SABOR: '60 g Original', PV: 14.75, BASE_DE_GANANCIA: 319.04, PRECIO_DE_VENTA_SUGERIDO: 354, '0.25': 273.9, '0.35': 242.0, '0.42': 219.66, '0.5': 194.14, CATEGORIA: 'TÉS', quantity: 0 },
-            { SKU: '2131', NOMBRE_DEL_PRODUCTO: 'N-R-G Té', SABOR: '60 g Manzana Verde', PV: 14.75, BASE_DE_GANANCIA: 319.04, PRECIO_DE_VENTA_SUGERIDO: 354, '0.25': 273.9, '0.35': 242.0, '0.42': 219.66, '0.5': 194.14, CATEGORIA: 'TÉS', quantity: 0 },
-            { SKU: '242', NOMBRE_DEL_PRODUCTO: 'Proteína en Polvo', SABOR: 'Original', PV: 17.95, BASE_DE_GANANCIA: 444.99, PRECIO_DE_VENTA_SUGERIDO: 573, '0.25': 443.16, '0.35': 391.54, '0.42': 355.41, '0.5': 314.11, CATEGORIA: 'PROTEÍNA EN POLVO', quantity: 0 },
-            { SKU: '2648', NOMBRE_DEL_PRODUCTO: 'Proteína en Polvo', SABOR: 'Frutos Rojos', PV: 17.95, BASE_DE_GANANCIA: 444.99, PRECIO_DE_VENTA_SUGERIDO: 573, '0.25': 443.16, '0.35': 391.54, '0.42': 355.41, '0.5': 314.11, CATEGORIA: 'PROTEÍNA EN POLVO', quantity: 0 },
-            { SKU: '2146', NOMBRE_DEL_PRODUCTO: 'Gold (antes Thermojetics Gold)', SABOR: 'Vainilla', PV: 35.4, BASE_DE_GANANCIA: 910.13, PRECIO_DE_VENTA_SUGERIDO: 1171, '0.25': 906.37, '0.35': 800.8, '0.42': 726.9, '0.5': 642.44, CATEGORIA: 'PROTEÍNA EN POLVO', quantity: 0 },
-            { SKU: '2147', NOMBRE_DEL_PRODUCTO: 'Gold (antes Thermojetics Gold)', SABOR: 'Chocolate', PV: 35.4, BASE_DE_GANANCIA: 910.13, PRECIO_DE_VENTA_SUGERIDO: 1264, '0.25': 978.88, '0.35': 864.86, '0.42': 785.05, '0.5': 693.83, CATEGORIA: 'PROTEÍNA EN POLVO', quantity: 0 },
-            { SKU: '289K', NOMBRE_DEL_PRODUCTO: 'Gold (antes Thermojetics Gold)', SABOR: 'Cacahuate', PV: 35.4, BASE_DE_GANANCIA: 910.13, PRECIO_DE_VENTA_SUGERIDO: 1171, '0.25': 906.37, '0.35': 800.8, '0.42': 726.9, '0.5': 642.44, CATEGORIA: 'PROTEÍNA EN POLVO', quantity: 0 },
-            { SKU: '3119', NOMBRE_DEL_PRODUCTO: 'Protein Mix (antes Polvo para Preparar Bebidas)', SABOR: 'Ponche de Frutas', PV: 18.75, BASE_DE_GANANCIA: 463.44, PRECIO_DE_VENTA_SUGERIDO: 663, '0.25': 527.78, '0.35': 474.02, '0.42': 436.39, '0.5': 393.38, CATEGORIA: 'PROTEÍNA EN POLVO', quantity: 0 },
-            { SKU: '3121', NOMBRE_DEL_PRODUCTO: 'Protein Mix (antes Polvo para Preparar Bebidas)', SABOR: 'Durazno Mango', PV: 18.75, BASE_DE_GANANCIA: 463.44, PRECIO_DE_VENTA_SUGERIDO: 669, '0.25': 534.19, '0.35': 480.43, '0.42': 442.8, '0.5': 399.79, CATEGORIA: 'PROTEÍNA EN POLVO', quantity: 0 },
-            { SKU: '2644', NOMBRE_DEL_PRODUCTO: 'Xtra-Shake', SABOR: 'Nuez', PV: 28.2, BASE_DE_GANANCIA: 670.0, PRECIO_DE_VENTA_SUGERIDO: 894, '0.25': 699.3, '0.35': 621.58, '0.42': 567.18, '0.5': 505.0, CATEGORIA: 'CONSISTENCIA Y CREMOSIDAD PARA TU BATIDO', quantity: 0 },
-            { SKU: '2641', NOMBRE_DEL_PRODUCTO: 'Xtra-Shake', SABOR: 'Original', PV: 28.2, BASE_DE_GANANCIA: 670.0, PRECIO_DE_VENTA_SUGERIDO: 894, '0.25': 699.3, '0.35': 621.58, '0.42': 567.18, '0.5': 505.0, CATEGORIA: 'CONSISTENCIA Y CREMOSIDAD PARA TU BATIDO', quantity: 0 },
-            { SKU: '1095', NOMBRE_DEL_PRODUCTO: 'Prolessa Duo', SABOR: '', PV: 23.75, BASE_DE_GANANCIA: 718.72, PRECIO_DE_VENTA_SUGERIDO: 928, '0.25': 718.96, '0.35': 635.59, '0.42': 577.23, '0.5': 510.53, CATEGORIA: 'OTROS NUTRIENTES', quantity: 0 },
-            { SKU: '77', NOMBRE_DEL_PRODUCTO: 'TC Formula', SABOR: '', PV: 32.95, BASE_DE_GANANCIA: 795.63, PRECIO_DE_VENTA_SUGERIDO: 1024, '0.25': 792.35, '0.35': 700.06, '0.42': 635.45, '0.5': 561.62, CATEGORIA: 'OTROS NUTRIENTES', quantity: 0 },
-            { SKU: '344K', NOMBRE_DEL_PRODUCTO: 'Natural-G (antes Anti-Snack)', SABOR: '', PV: 23.5, BASE_DE_GANANCIA: 547.42, PRECIO_DE_VENTA_SUGERIDO: 704, '0.25': 545.17, '0.35': 481.67, '0.42': 437.22, '0.5': 386.42, CATEGORIA: 'OTROS NUTRIENTES', quantity: 0 },
-            { SKU: '1829', NOMBRE_DEL_PRODUCTO: 'Probiotic Advantage', SABOR: '', PV: 20.45, BASE_DE_GANANCIA: 550.14, PRECIO_DE_VENTA_SUGERIDO: 708, '0.25': 547.87, '0.35': 484.06, '0.42': 439.39, '0.5': 388.33, CATEGORIA: 'FIBRA', quantity: 0 },
-            { SKU: '103K', NOMBRE_DEL_PRODUCTO: 'Active Fiber Complex Select', SABOR: 'Piña-Coco', PV: 25.15, BASE_DE_GANANCIA: 601.11, PRECIO_DE_VENTA_SUGERIDO: 794, '0.25': 618.68, '0.35': 548.95, '0.42': 500.14, '0.5': 444.36, CATEGORIA: 'FIBRA', quantity: 0 },
-            { SKU: '2864', NOMBRE_DEL_PRODUCTO: 'Active Fiber Complex', SABOR: 'Manzana', PV: 22.95, BASE_DE_GANANCIA: 549.1, PRECIO_DE_VENTA_SUGERIDO: 707, '0.25': 546.85, '0.35': 483.16, '0.42': 438.57, '0.5': 387.61, CATEGORIA: 'FIBRA', quantity: 0 },
-            { SKU: '103', NOMBRE_DEL_PRODUCTO: 'Thermo-Bond®', SABOR: '', PV: 15.75, BASE_DE_GANANCIA: 355.97, PRECIO_DE_VENTA_SUGERIDO: 458, '0.25': 354.49, '0.35': 313.2, '0.42': 284.3, '0.5': 251.26, CATEGORIA: 'FIBRA', quantity: 0 },
-            { SKU: '3146', NOMBRE_DEL_PRODUCTO: 'Niteworks®', SABOR: 'Naranja-Mango', PV: 48.75, BASE_DE_GANANCIA: 1281.22, PRECIO_DE_VENTA_SUGERIDO: 1655, '0.25': 1282.84, '0.35': 1134.22, '0.42': 1030.18, '0.5': 911.29, CATEGORIA: 'PARA ÉL Y ELLA', quantity: 0 },
-            { SKU: '3150', NOMBRE_DEL_PRODUCTO: 'Niteworks®', SABOR: 'Limón', PV: 48.75, BASE_DE_GANANCIA: 1281.22, PRECIO_DE_VENTA_SUGERIDO: 1655, '0.25': 1282.84, '0.35': 1134.22, '0.42': 1030.18, '0.5': 911.29, CATEGORIA: 'PARA ÉL Y ELLA', quantity: 0 },
-            { SKU: '267', NOMBRE_DEL_PRODUCTO: 'Betaglucanos', SABOR: 'Vainilla', PV: 43.85, BASE_DE_GANANCIA: 1006.73, PRECIO_DE_VENTA_SUGERIDO: 1295, '0.25': 1002.6, '0.35': 885.82, '0.42': 804.07, '0.5': 710.65, CATEGORIA: 'PARA ÉL Y ELLA', quantity: 0 },
-            { SKU: '65', NOMBRE_DEL_PRODUCTO: 'Herbalifeline®', SABOR: '', PV: 25.75, BASE_DE_GANANCIA: 661.61, PRECIO_DE_VENTA_SUGERIDO: 851, '0.25': 658.89, '0.35': 582.14, '0.42': 528.42, '0.5': 467.02, CATEGORIA: 'PARA ÉL Y ELLA', quantity: 0 },
-            { SKU: '32', NOMBRE_DEL_PRODUCTO: 'Garlic Plus', SABOR: '', PV: 12.95, BASE_DE_GANANCIA: 342.53, PRECIO_DE_VENTA_SUGERIDO: 441, '0.25': 341.12, '0.35': 301.38, '0.42': 273.57, '0.5': 241.78, CATEGORIA: 'PARA ÉL Y ELLA', quantity: 0 },
-            { SKU: '39', NOMBRE_DEL_PRODUCTO: 'Prelox® Azul', SABOR: '', PV: 49.95, BASE_DE_GANANCIA: 1244.27, PRECIO_DE_VENTA_SUGERIDO: 1600, '0.25': 1239.15, '0.35': 1094.81, '0.42': 993.78, '0.5': 878.31, CATEGORIA: 'PARA ÉL Y ELLA', quantity: 0 },
-            { SKU: '2374', NOMBRE_DEL_PRODUCTO: 'Herbalife® Pro', SABOR: 'Miel-Limón y Jengibre', PV: 26.5, BASE_DE_GANANCIA: 729.73, PRECIO_DE_VENTA_SUGERIDO: 952, '0.25': 739.88, '0.35': 655.23, '0.42': 595.98, '0.5': 528.26, CATEGORIA: 'NUTRIENTES PARA TI', quantity: 0 },
-            { SKU: '1094', NOMBRE_DEL_PRODUCTO: 'Schizandra Plus', SABOR: '', PV: 15.5, BASE_DE_GANANCIA: 342.53, PRECIO_DE_VENTA_SUGERIDO: 441, '0.25': 341.12, '0.35': 301.38, '0.42': 273.57, '0.5': 241.78, CATEGORIA: 'NUTRIENTES PARA TI', quantity: 0 },
-            { SKU: '1061', NOMBRE_DEL_PRODUCTO: 'Woman\'s Choice', SABOR: '', PV: 37.0, BASE_DE_GANANCIA: 745.94, PRECIO_DE_VENTA_SUGERIDO: 960, '0.25': 742.86, '0.35': 656.33, '0.42': 595.76, '0.5': 526.54, CATEGORIA: 'NUTRICIÓN PARA LA MUJER', quantity: 0 },
-            { SKU: '343K', NOMBRE_DEL_PRODUCTO: 'Fito Complex (antes Cell-U-Loss®)', SABOR: '', PV: 15.75, BASE_DE_GANANCIA: 361.03, PRECIO_DE_VENTA_SUGERIDO: 465, '0.25': 359.54, '0.35': 317.67, '0.42': 288.35, '0.5': 254.85, CATEGORIA: 'NUTRICIÓN PARA LA MUJER', quantity: 0 },
-            { SKU: '565', NOMBRE_DEL_PRODUCTO: 'Xtra-Cal®Advanced', SABOR: '', PV: 10.7, BASE_DE_GANANCIA: 256.92, PRECIO_DE_VENTA_SUGERIDO: 331, '0.25': 255.87, '0.35': 226.07, '0.42': 205.21, '0.5': 181.37, CATEGORIA: 'NUTRICIÓN PARA LA MUJER', quantity: 0 },
-            { SKU: '831', NOMBRE_DEL_PRODUCTO: 'Colágeno en Polvo', SABOR: 'Limonada de Fresa', PV: 37.1, BASE_DE_GANANCIA: 947.84, PRECIO_DE_VENTA_SUGERIDO: 1219, '0.25': 943.94, '0.35': 833.99, '0.42': 757.02, '0.5': 669.06, CATEGORIA: 'NUTRICIÓN PARA LA MUJER', quantity: 0 },
-            { SKU: '396K', NOMBRE_DEL_PRODUCTO: 'Protein Chips', SABOR: 'Barbacue', PV: 13.4, BASE_DE_GANANCIA: 305.88, PRECIO_DE_VENTA_SUGERIDO: 528, '0.25': 431.3, '0.35': 392.98, '0.42': 366.16, '0.5': 335.5, CATEGORIA: 'SNACKS CON PROTEÍNA', quantity: 0 },
-            { SKU: '385K', NOMBRE_DEL_PRODUCTO: 'Protein Crunch', SABOR: 'Chocolate', PV: 12.1, BASE_DE_GANANCIA: 277.98, PRECIO_DE_VENTA_SUGERIDO: 444, '0.25': 356.43, '0.35': 321.6, '0.42': 297.22, '0.5': 269.36, CATEGORIA: 'SNACKS CON PROTEÍNA', quantity: 0 },
-            { SKU: '364', NOMBRE_DEL_PRODUCTO: 'Barra Deluxe con Proteína', SABOR: 'Vainilla con Almendra', PV: 13.22, BASE_DE_GANANCIA: 325.76, PRECIO_DE_VENTA_SUGERIDO: 618, '0.25': 529.18, '0.35': 494.0, '0.42': 469.37, '0.5': 441.22, CATEGORIA: 'SNACKS CON PROTEÍNA', quantity: 0 },
-            { SKU: '366', NOMBRE_DEL_PRODUCTO: 'Barra Deluxe con Proteína', SABOR: 'Limón', PV: 13.22, BASE_DE_GANANCIA: 325.76, PRECIO_DE_VENTA_SUGERIDO: 618, '0.25': 529.18, '0.35': 494.0, '0.42': 469.37, '0.5': 441.22, CATEGORIA: 'SNACKS CON PROTEÍNA', quantity: 0 },
-            { SKU: '3525', NOMBRE_DEL_PRODUCTO: 'Barras con Proteína', SABOR: 'Chocolate', PV: 10.95, BASE_DE_GANANCIA: 266.96, PRECIO_DE_VENTA_SUGERIDO: 498, '0.25': 425.31, '0.35': 396.48, '0.42': 376.3, '0.5': 353.24, CATEGORIA: 'SNACKS CON PROTEÍNA', quantity: 0 },
-            { SKU: '3115', NOMBRE_DEL_PRODUCTO: 'Herbalife® Número 2 Multivitaminas, Minerales y Hierbas', SABOR: '', PV: 19.95, BASE_DE_GANANCIA: 520.55, PRECIO_DE_VENTA_SUGERIDO: 670, '0.25': 518.41, '0.35': 458.02, '0.42': 415.75, '0.5': 367.45, CATEGORIA: 'NUTRICIÓN ESPECÍFICA', quantity: 0 },
-            { SKU: '2364', NOMBRE_DEL_PRODUCTO: 'Herbalife® Número 2 en Polvo/ Multivitaminas, Minerales y Hierbas', SABOR: '', PV: 22.0, BASE_DE_GANANCIA: 589.63, PRECIO_DE_VENTA_SUGERIDO: 759, '0.25': 587.21, '0.35': 518.81, '0.42': 470.93, '0.5': 416.21, CATEGORIA: 'NUTRICIÓN ESPECÍFICA', quantity: 0 },
-            { SKU: '095K', NOMBRE_DEL_PRODUCTO: 'Kid\'s Splash', SABOR: 'Moras', PV: 31.0, BASE_DE_GANANCIA: 712.12, PRECIO_DE_VENTA_SUGERIDO: 916, '0.25': 709.2, '0.35': 626.59, '0.42': 568.77, '0.5': 502.69, CATEGORIA: 'NUTRICIÓN ESPECÍFICA', quantity: 0 },
-            { SKU: '345K', NOMBRE_DEL_PRODUCTO: 'Herbalife Número 3 (antes Cell Activator)', SABOR: '', PV: 21.95, BASE_DE_GANANCIA: 591.07, PRECIO_DE_VENTA_SUGERIDO: 761, '0.25': 588.64, '0.35': 520.08, '0.42': 472.09, '0.5': 417.23, CATEGORIA: 'NUTRICIÓN ESPECÍFICA', quantity: 0 },
-            { SKU: '64', NOMBRE_DEL_PRODUCTO: 'Arándano con minerales, vitaminas y luteína', SABOR: '', PV: 17.2, BASE_DE_GANANCIA: 431.57, PRECIO_DE_VENTA_SUGERIDO: 555, '0.25': 429.79, '0.35': 379.73, '0.42': 344.68, '0.5': 304.63, CATEGORIA: 'NUTRICIÓN ESPECÍFICA', quantity: 0 },
-            { SKU: '101K', NOMBRE_DEL_PRODUCTO: 'Balance M', SABOR: '', PV: 27.95, BASE_DE_GANANCIA: 649.43, PRECIO_DE_VENTA_SUGERIDO: 836, '0.25': 646.75, '0.35': 571.42, '0.42': 518.68, '0.5': 458.41, CATEGORIA: 'NUTRICIÓN ESPECÍFICA', quantity: 0 },
-            { SKU: '386K', NOMBRE_DEL_PRODUCTO: 'Creatina', SABOR: '', PV: 11.3, BASE_DE_GANANCIA: 273.1, PRECIO_DE_VENTA_SUGERIDO: 391, '0.25': 310.96, '0.35': 279.28, '0.42': 257.1, '0.5': 231.76, CATEGORIA: 'NUTRICIÓN PARA ATLETAS', quantity: 0 },
-            { SKU: '024K', NOMBRE_DEL_PRODUCTO: 'Herbalife24® BCAAs', SABOR: 'Manzana Verde', PV: 35.6, BASE_DE_GANANCIA: 817.25, PRECIO_DE_VENTA_SUGERIDO: 1222, '0.25': 984.91, '0.35': 890.11, '0.42': 823.75, '0.5': 747.9, CATEGORIA: 'NUTRICIÓN PARA ATLETAS', quantity: 0 },
-            { SKU: '3492', NOMBRE_DEL_PRODUCTO: 'Herbalife® Número 1 Sport', SABOR: 'Vainilla', PV: 43.15, BASE_DE_GANANCIA: 1048.64, PRECIO_DE_VENTA_SUGERIDO: 1414, '0.25': 1109.27, '0.35': 987.63, '0.42': 902.48, '0.5': 805.17, CATEGORIA: 'NUTRICIÓN PARA ATLETAS', quantity: 0 },
-            { SKU: '3490', NOMBRE_DEL_PRODUCTO: 'Strength', SABOR: 'Chocolate', PV: 58.8, BASE_DE_GANANCIA: 1666.99, PRECIO_DE_VENTA_SUGERIDO: 2405, '0.25': 1881.91, '0.35': 1673.07, '0.42': 1526.88, '0.5': 1359.81, CATEGORIA: 'NUTRICIÓN PARA ATLETAS', quantity: 0 },
-            { SKU: '1120', NOMBRE_DEL_PRODUCTO: 'H24 Enhanced Protein Powder', SABOR: '', PV: 58.8, BASE_DE_GANANCIA: 1666.99, PRECIO_DE_VENTA_SUGERIDO: 2235, '0.25': 1751.27, '0.35': 1557.9, '0.42': 1422.54, '0.5': 1267.84, CATEGORIA: 'NUTRICIÓN PARA ATLETAS', quantity: 0 },
-            { SKU: '1473', NOMBRE_DEL_PRODUCTO: 'CR7 Drive', SABOR: 'Açaí', PV: 24.9, BASE_DE_GANANCIA: 539.7, PRECIO_DE_VENTA_SUGERIDO: 799, '0.25': 641.96, '0.35': 579.35, '0.42': 535.53, '0.5': 485.44, CATEGORIA: 'NUTRICIÓN PARA ATLETAS', quantity: 0 },
-            { SKU: '766', NOMBRE_DEL_PRODUCTO: 'Limpiador Cítrico para la piel', SABOR: '', PV: 16.75, BASE_DE_GANANCIA: 335.83, PRECIO_DE_VENTA_SUGERIDO: 432, '0.25': 334.44, '0.35': 295.49, '0.42': 268.22, '0.5': 237.05, CATEGORIA: 'HERBALIFE SKIN', quantity: 0 },
-            { SKU: '765', NOMBRE_DEL_PRODUCTO: 'Gel Limpiador de Sábila', SABOR: '', PV: 16.75, BASE_DE_GANANCIA: 335.83, PRECIO_DE_VENTA_SUGERIDO: 432, '0.25': 334.44, '0.35': 295.49, '0.42': 268.22, '0.5': 237.05, CATEGORIA: 'HERBALIFE SKIN', quantity: 0 },
-            { SKU: '767', NOMBRE_DEL_PRODUCTO: 'Tonificador Energizante de Hierbas', SABOR: '', PV: 12.7, BASE_DE_GANANCIA: 300.56, PRECIO_DE_VENTA_SUGERIDO: 387, '0.25': 299.33, '0.35': 264.46, '0.42': 240.06, '0.5': 212.16, CATEGORIA: 'HERBALIFE SKIN', quantity: 0 },
-            { SKU: '768', NOMBRE_DEL_PRODUCTO: 'Sérum Reductor de Líneas de Expresión', SABOR: '', PV: 37.7, BASE_DE_GANANCIA: 816.09, PRECIO_DE_VENTA_SUGERIDO: 1050, '0.25': 812.72, '0.35': 718.05, '0.42': 651.78, '0.5': 576.05, CATEGORIA: 'HERBALIFE SKIN', quantity: 0 },
-            { SKU: '771', NOMBRE_DEL_PRODUCTO: 'Crema Hidratante para Contorno de Ojos', SABOR: '', PV: 26.35, BASE_DE_GANANCIA: 570.92, PRECIO_DE_VENTA_SUGERIDO: 735, '0.25': 568.56, '0.35': 502.34, '0.42': 455.98, '0.5': 403.0, CATEGORIA: 'HERBALIFE SKIN', quantity: 0 },
-            { SKU: '770', NOMBRE_DEL_PRODUCTO: 'Gel Reafirmante para Contorno de Ojos', SABOR: '', PV: 26.35, BASE_DE_GANANCIA: 570.92, PRECIO_DE_VENTA_SUGERIDO: 735, '0.25': 568.56, '0.35': 502.34, '0.42': 455.98, '0.5': 403.0, CATEGORIA: 'HERBALIFE SKIN', quantity: 0 },
-            { SKU: '899', NOMBRE_DEL_PRODUCTO: 'Crema Humectante FPS 30', SABOR: '', PV: 28.4, BASE_DE_GANANCIA: 562.54, PRECIO_DE_VENTA_SUGERIDO: 724, '0.25': 560.24, '0.35': 494.98, '0.42': 449.31, '0.5': 397.1, CATEGORIA: 'HERBALIFE SKIN', quantity: 0 },
-            { SKU: '774', NOMBRE_DEL_PRODUCTO: 'Crema Hidratante de Noche', SABOR: '', PV: 28.4, BASE_DE_GANANCIA: 616.29, PRECIO_DE_VENTA_SUGERIDO: 793, '0.25': 613.75, '0.35': 542.26, '0.42': 492.22, '0.5': 435.03, CATEGORIA: 'HERBALIFE SKIN', quantity: 0 },
-            { SKU: '772', NOMBRE_DEL_PRODUCTO: 'Exfoliante con Arándanos para el Cutis', SABOR: '', PV: 13.1, BASE_DE_GANANCIA: 258.59, PRECIO_DE_VENTA_SUGERIDO: 333, '0.25': 257.53, '0.35': 227.54, '0.42': 206.54, '0.5': 182.54, CATEGORIA: 'HERBALIFE SKIN', quantity: 0 },
-            { SKU: '773', NOMBRE_DEL_PRODUCTO: 'Mascarilla Limpiadora de Arcilla con Menta', SABOR: '', PV: 14.2, BASE_DE_GANANCIA: 319.02, PRECIO_DE_VENTA_SUGERIDO: 411, '0.25': 317.73, '0.35': 280.72, '0.42': 254.82, '0.5': 225.21, CATEGORIA: 'HERBALIFE SKIN', quantity: 0 },
-            { SKU: '1492', NOMBRE_DEL_PRODUCTO: 'Programa SKIN Básico: Normal / Seco', SABOR: '', PV: 86.25, BASE_DE_GANANCIA: 1815.22, PRECIO_DE_VENTA_SUGERIDO: 2335, '0.25': 1807.76, '0.35': 1597.2, '0.42': 1449.8, '0.5': 1281.35, CATEGORIA: 'PROGRAMAS HERBALIFE SKIN', quantity: 0 },
-            { SKU: '1496', NOMBRE_DEL_PRODUCTO: 'Programa SKIN Básico: Normal / Graso', SABOR: '', PV: 86.25, BASE_DE_GANANCIA: 1815.22, PRECIO_DE_VENTA_SUGERIDO: 2335, '0.25': 1807.76, '0.35': 1597.2, '0.42': 1449.8, '0.5': 1281.35, CATEGORIA: 'PROGRAMAS HERBALIFE SKIN', quantity: 0 },
-            { SKU: '1493', NOMBRE_DEL_PRODUCTO: 'Programa SKIN Intermedio: Normal / Seco', SABOR: '', PV: 176.65, BASE_DE_GANANCIA: 3773.15, PRECIO_DE_VENTA_SUGERIDO: 4852, '0.25': 3757.6, '0.35': 3319.92, '0.42': 3013.54, '0.5': 2663.39, CATEGORIA: 'PROGRAMAS HERBALIFE SKIN', quantity: 0 },
-            { SKU: '1497', NOMBRE_DEL_PRODUCTO: 'Programa SKIN Intermedio: Normal / Graso', SABOR: '', PV: 176.65, BASE_DE_GANANCIA: 3773.15, PRECIO_DE_VENTA_SUGERIDO: 4852, '0.25': 3757.6, '0.35': 3319.92, '0.42': 3013.54, '0.5': 2663.39, CATEGORIA: 'PROGRAMAS HERBALIFE SKIN', quantity: 0 },
-            { SKU: '1494', NOMBRE_DEL_PRODUCTO: 'Programa SKIN Avanzado: Normal / Seco', SABOR: '', PV: 203.95, BASE_DE_GANANCIA: 4350.76, PRECIO_DE_VENTA_SUGERIDO: 5595, '0.25': 4332.87, '0.35': 3828.18, '0.42': 3474.9, '0.5': 3071.15, CATEGORIA: 'PROGRAMAS HERBALIFE SKIN', quantity: 0 },
-            { SKU: '1498', NOMBRE_DEL_PRODUCTO: 'Programa SKIN Avanzado: Normal / Graso', SABOR: '', PV: 203.95, BASE_DE_GANANCIA: 4350.76, PRECIO_DE_VENTA_SUGERIDO: 5595, '0.25': 4332.87, '0.35': 3828.18, '0.42': 3474.9, '0.5': 3071.15, CATEGORIA: 'PROGRAMAS HERBALIFE SKIN', quantity: 0 },
-            { SKU: '413', NOMBRE_DEL_PRODUCTO: 'Herbal Aloe Gel Corporal con Aloe', SABOR: '', PV: 8.05, BASE_DE_GANANCIA: 225.01, PRECIO_DE_VENTA_SUGERIDO: 290, '0.25': 224.1, '0.35': 198.0, '0.42': 179.73, '0.5': 158.84, CATEGORIA: 'HERBAL ALOE', quantity: 0 }
-          ]
+          productsVisible: true,
+          products: []
         };
       },
       computed: {
@@ -496,34 +219,13 @@
         filteredAndSearchedProducts() {
           let filteredProducts = this.products;
 
-          // Si hay una búsqueda activa, filtramos por nombre en TODAS las categorías
           if (this.searchQuery) {
             filteredProducts = this.products.filter(product =>
               product.NOMBRE_DEL_PRODUCTO.toLowerCase().includes(this.searchQuery.toLowerCase())
             );
           } else {
-            // Si no hay búsqueda, filtramos por categoría seleccionada
             filteredProducts = this.products.filter(product =>
               product.CATEGORIA === this.selectedCategory
-            );
-          }
-
-          return filteredProducts;
-        },
-        filteredAndSearchedAdminProducts() {
-          let filteredProducts = this.products;
-
-          // Filtrado por categoría en el panel de admin (si hay categoría seleccionada)
-          if (this.selectedAdminCategory) {
-            filteredProducts = filteredProducts.filter(product =>
-              product.CATEGORIA === this.selectedAdminCategory
-            );
-          }
-
-          // Filtrado por búsqueda en el panel de admin
-          if (this.adminSearchQuery) {
-            filteredProducts = filteredProducts.filter(product =>
-              product.NOMBRE_DEL_PRODUCTO.toLowerCase().includes(this.adminSearchQuery.toLowerCase())
             );
           }
 
@@ -555,98 +257,33 @@
         }
       },
       methods: {
-        updateSummary() {
-          // Actualiza el resumen cuando cambia la cantidad
-        },
         toggleProducts() {
-          this.productsVisible = true; // Siempre mostramos los productos al cambiar de categoría
-        },
-        toggleAdminProducts() {
-          this.adminProductsVisible = true; // Siempre mostramos los productos en admin
-        },
-        showLogin() {
-          this.view = 'login';
-          this.clearSearch(); // Limpiamos búsqueda al cambiar de vista
-        },
-        checkPassword() {
-          if (this.adminPassword === this.correctPassword) {
-            this.view = 'admin';
-            this.adminPassword = '';
-          } else {
-            alert('Clave incorrecta. Intenta de nuevo.');
-          }
+          this.productsVisible = true; // Asegurar que los productos sean visibles al cambiar categoría
         },
         searchAndClear() {
-          // Realizamos la búsqueda y luego limpiamos el campo
-          this.searchQuery = ''; // Limpiamos después de buscar
+          this.searchQuery = ''; // Limpiar el campo después de buscar
         },
-        searchAndClearAdmin() {
-          // Realizamos la búsqueda y luego limpiamos el campo en admin
-          this.adminSearchQuery = ''; // Limpiamos después de buscar
+        updateSummary() {
+          // No necesitamos guardar en localStorage ni hacer otras acciones, solo actualizar el resumen
         },
-        clearSearch() {
-          this.searchQuery = '';
-          this.adminSearchQuery = '';
-        },
-        saveProduct() {
-          if (this.editingProduct) {
-            const index = this.products.findIndex(p => p.SKU === this.editingProduct.SKU);
-            this.products[index] = { ...this.newProduct, quantity: this.products[index].quantity };
-            this.editingProduct = null;
-          } else {
-            this.products.push({ ...this.newProduct, quantity: 0 });
-          }
-          this.resetForm();
-          this.saveToLocalStorage();
-        },
-        editProduct(product) {
-          this.editingProduct = product;
-          this.newProduct = { ...product };
-        },
-        cancelEdit() {
-          this.editingProduct = null;
-          this.resetForm();
-        },
-        deleteProduct(sku) {
-          this.products = this.products.filter(product => product.SKU !== sku);
-          this.saveToLocalStorage();
-        },
-        resetForm() {
-          this.newProduct = {
-            SKU: '',
-            NOMBRE_DEL_PRODUCTO: '',
-            SABOR: '',
-            PV: 0,
-            BASE_DE_GANANCIA: 0,
-            PRECIO_DE_VENTA_SUGERIDO: 0,
-            '0.25': 0,
-            '0.35': 0,
-            '0.42': 0,
-            '0.5': 0,
-            CATEGORIA: 'BATIDOS',
-            quantity: 0
-          };
-        },
-        saveToLocalStorage() {
-          localStorage.setItem('herbalifeProducts', JSON.stringify(this.products));
-        },
-        loadFromLocalStorage() {
-          const savedProducts = localStorage.getItem('herbalifeProducts');
-          if (savedProducts) {
-            this.products = JSON.parse(savedProducts);
+        async loadProductsFromJSON() {
+          try {
+            const response = await fetch('products.json');
+            const data = await response.json();
+            this.products = data.map(product => ({
+              ...product,
+              quantity: 0 // Inicializar quantity en 0
+            }));
+          } catch (error) {
+            console.error("Error al cargar products.json:", error);
           }
         }
       },
       mounted() {
-        this.loadFromLocalStorage();
-        this.toggleProducts(); // Aseguramos que los productos se muestren al cargar la página
+        this.loadProductsFromJSON();
+        this.toggleProducts();
       }
     }).mount('#app');
   </script>
 </body>
 </html>
-
-
-
-
-
