@@ -220,10 +220,11 @@
           let filteredProducts = this.products;
 
           if (this.searchQuery) {
-            const searchTerm = this.searchQuery.toLowerCase().trim();
+            const searchTerm = this.removeAccents(this.searchQuery.toLowerCase().trim());
             filteredProducts = this.products.filter(product => {
-              const fullName = `${product.NOMBRE_DEL_PRODUCTO} ${product.SABOR || ''}`.toLowerCase();
-              return fullName.includes(searchTerm);
+              const fullName = `${product.NOMBRE_DEL_PRODUCTO} ${product.SABOR || ''}`;
+              const normalizedFullName = this.removeAccents(fullName.toLowerCase());
+              return normalizedFullName.includes(searchTerm);
             });
           } else {
             filteredProducts = this.products.filter(product =>
@@ -259,6 +260,10 @@
         }
       },
       methods: {
+        // Método para eliminar acentos de una cadena
+        removeAccents(str) {
+          return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        },
         toggleProducts() {
           this.productsVisible = true;
         },
