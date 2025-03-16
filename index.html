@@ -220,9 +220,11 @@
           let filteredProducts = this.products;
 
           if (this.searchQuery) {
-            filteredProducts = this.products.filter(product =>
-              product.NOMBRE_DEL_PRODUCTO.toLowerCase().includes(this.searchQuery.toLowerCase())
-            );
+            const searchTerm = this.searchQuery.toLowerCase().trim();
+            filteredProducts = this.products.filter(product => {
+              const fullName = `${product.NOMBRE_DEL_PRODUCTO} ${product.SABOR || ''}`.toLowerCase();
+              return fullName.includes(searchTerm);
+            });
           } else {
             filteredProducts = this.products.filter(product =>
               product.CATEGORIA === this.selectedCategory
