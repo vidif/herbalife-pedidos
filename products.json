@@ -322,6 +322,20 @@
     "quantity": 0
   },
   {
+    "SKU": "132K",
+    "NOMBRE_DEL_PRODUCTO": "LIFTOFF",
+    "SABOR": "Moras",
+    "PV": 40.25,
+    "BASE_DE_GANANCIA": 786.12,
+    "PRECIO_DE_VENTA_SUGERIDO": 1301,
+    "0.25": 1015.74,
+    "0.35": 901.75,
+    "0.42": 821.96,
+    "0.50": 730.77,
+    "CATEGORIA": "BEBIDA ADICIONADA CON CAFEÍNA",
+    "quantity": 0
+  },
+  {
     "SKU": "044K",
     "NOMBRE_DEL_PRODUCTO": "Infusión Herbal",
     "SABOR": "48 g Menta",
