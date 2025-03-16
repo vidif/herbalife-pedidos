@@ -419,8 +419,8 @@
           }
 
           const searchTerm = this.removeAccents(this.searchQuery.toLowerCase().trim());
-          // Filtrar productos que coincidan con la búsqueda dentro de la categoría seleccionada
-          const searchResults = categoryProducts.filter(product => {
+          // Buscar coincidencias en todos los productos (sin limitarse a la categoría)
+          const searchResults = this.products.filter(product => {
             const fullName = `${product.NOMBRE_DEL_PRODUCTO} ${product.SABOR || ''}`;
             const normalizedFullName = this.removeAccents(fullName.toLowerCase());
             return normalizedFullName.includes(searchTerm);
