@@ -149,20 +149,45 @@
       color: #555;
     }
 
-    .product input {
-      width: 70px;
-      padding: 8px;
+    .quantity-control {
+      display: flex;
+      align-items: center;
+      gap: 5px;
       margin-top: 10px;
+    }
+
+    .quantity-control input {
+      width: 50px;
+      padding: 8px;
       background-color: #ffffff;
       color: #333;
       border: 1px solid #003087;
       border-radius: 5px;
+      text-align: center;
       transition: border-color 0.3s;
     }
 
-    .product input:focus {
+    .quantity-control input:focus {
       border-color: #d4a017;
       outline: none;
+    }
+
+    .quantity-control button {
+      width: 30px;
+      height: 30px;
+      background-color: #003087;
+      color: #ffffff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .quantity-control button:hover {
+      background-color: #d4a017;
     }
 
     .summary {
@@ -184,6 +209,17 @@
       margin-bottom: 8px;
       font-size: 0.9em;
       color: #555;
+    }
+
+    .summary .quantity-input {
+      width: 50px;
+      padding: 5px;
+      background-color: #ffffff;
+      color: #333;
+      border: 1px solid #003087;
+      border-radius: 5px;
+      text-align: center;
+      margin-left: 5px;
     }
 
     .view-summary-btn {
@@ -235,6 +271,17 @@
       margin-bottom: 8px;
       font-size: 0.9em;
       color: #555;
+    }
+
+    .modal-content .quantity-input {
+      width: 50px;
+      padding: 5px;
+      background-color: #ffffff;
+      color: #333;
+      border: 1px solid #003087;
+      border-radius: 5px;
+      text-align: center;
+      margin-left: 5px;
     }
 
     .modal-buttons {
@@ -330,7 +377,11 @@
         <p><strong>42%:</strong> ${{ product['0.42'].toFixed(2) }}</p>
         <p><strong>50%:</strong> ${{ product['0.50'].toFixed(2) }}</p>
         <p><strong>Categoría:</strong> {{ product.CATEGORIA }}</p>
-        <input type="number" v-model.number="product.quantity" min="0" @input="updateSummary" placeholder="Cantidad">
+        <div class="quantity-control">
+          <button @click="decreaseQuantity(product)">−</button>
+          <input type="number" v-model.number="product.quantity" min="0" @input="updateSummary" placeholder="Cantidad">
+          <button @click="increaseQuantity(product)">+</button>
+        </div>
       </div>
     </div>
 
@@ -338,7 +389,8 @@
       <h2>Resumen del Pedido</h2>
       <p v-if="selectedItems.length === 0">No hay productos seleccionados.</p>
       <p v-for="item in selectedItems" :key="item.SKU">
-        <strong>{{ item.NOMBRE_DEL_PRODUCTO }} ({{ item.SABOR ? item.SABOR : 'Sin sabor' }})</strong> - <strong>Cantidad: {{ item.quantity }}</strong> | 
+        <strong>{{ item.NOMBRE_DEL_PRODUCTO }} ({{ item.SABOR ? item.SABOR : 'Sin sabor' }})</strong> - 
+        Cantidad: <input type="number" v-model.number="item.quantity" min="0" class="quantity-input" @input="updateSummary"> | 
         <strong>P.V. Total: {{ (item.quantity * item.PV).toFixed(2) }}</strong> | 
         Base Ganancia: ${{ (item.quantity * item.BASE_DE_GANANCIA).toFixed(2) }} | 
         Precio Sug.: ${{ (item.quantity * item.PRECIO_DE_VENTA_SUGERIDO).toFixed(2) }} | 
@@ -367,7 +419,8 @@
         <p v-if="selectedItems.length === 0">No hay productos seleccionados.</p>
         <div v-for="item in selectedItems" :key="item.SKU" class="item-details">
           <p>
-            <strong>{{ item.NOMBRE_DEL_PRODUCTO }} ({{ item.SABOR ? item.SABOR : 'Sin sabor' }})</strong> - <strong>Cantidad: {{ item.quantity }}</strong> | 
+            <strong>{{ item.NOMBRE_DEL_PRODUCTO }} ({{ item.SABOR ? item.SABOR : 'Sin sabor' }})</strong> - 
+            Cantidad: <input type="number" v-model.number="item.quantity" min="0" class="quantity-input" @input="updateSummary"> | 
             <strong>P.V. Total: {{ (item.quantity * item.PV).toFixed(2) }}</strong> | 
             Base Ganancia: ${{ (item.quantity * item.BASE_DE_GANANCIA).toFixed(2) }} | 
             Precio Sug.: ${{ (item.quantity * item.PRECIO_DE_VENTA_SUGERIDO).toFixed(2) }} | 
@@ -473,8 +526,16 @@
         clearSearch() {
           this.searchQuery = ''; // Borra la búsqueda al hacer clic en la "X" o en el botón
         },
+        increaseQuantity(product) {
+          product.quantity = (product.quantity || 0) + 1;
+          this.updateSummary();
+        },
+        decreaseQuantity(product) {
+          product.quantity = Math.max(0, (product.quantity || 0) - 1);
+          this.updateSummary();
+        },
         updateSummary() {
-          this.products = [...this.products]; // Actualiza la lista de productos
+          this.products = [...this.products]; // Actualiza la lista de productos para forzar reactividad
         },
         async loadProductsFromJSON() {
           try {
