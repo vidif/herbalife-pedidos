@@ -141,7 +141,7 @@
 
     .summary p {
       margin-bottom: 8px;
-      font-size: 1em;
+      font-size: 0.9em;
       color: #555;
     }
 
@@ -162,7 +162,6 @@
 
     /* Modal Styles */
     .modal {
-      display: none;
       position: fixed;
       top: 0;
       left: 0;
@@ -170,11 +169,13 @@
       height: 100%;
       background-color: rgba(0, 0, 0, 0.5);
       z-index: 1000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
     .modal-content {
       background-color: #fff;
-      margin: 5% auto;
       padding: 20px;
       border-radius: 8px;
       width: 80%;
@@ -311,12 +312,12 @@
       <p><strong>Total 50%:</strong> ${{ total050.toFixed(2) }}</p>
     </div>
 
-    <button class="view-summary-btn" @click="showModal = true">Ver Resumen Detallado</button>
+    <button class="view-summary-btn" @click="openModal">Ver Resumen Detallado</button>
 
     <!-- Modal -->
     <div v-if="showModal" class="modal">
       <div class="modal-content">
-        <span class="close-modal" @click="showModal = false">×</span>
+        <span class="close-modal" @click="closeModal">×</span>
         <h2>Resumen del Pedido</h2>
         <p v-if="selectedItems.length === 0">No hay productos seleccionados.</p>
         <div v-for="item in selectedItems" :key="item.SKU" class="item-details">
@@ -445,6 +446,15 @@
           } catch (error) {
             console.error("Error al cargar products.json:", error);
           }
+        },
+        openModal() {
+          console.log('Abriendo modal, showModal antes:', this.showModal);
+          this.showModal = true;
+          console.log('showModal después:', this.showModal);
+        },
+        closeModal() {
+          console.log('Cerrando modal');
+          this.showModal = false;
         },
         printModal() {
           window.print();
