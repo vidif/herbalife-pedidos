@@ -285,7 +285,7 @@
         <p><strong>42%:</strong> ${{ product['0.42'].toFixed(2) }}</p>
         <p><strong>50%:</strong> ${{ product['0.50'].toFixed(2) }}</p>
         <p><strong>Categoría:</strong> {{ product.CATEGORIA }}</p>
-        <input type="number" v-model.number="product.quantity" min="0" @input="updateSummary" placeholder="Cantidad">
+        <input type="number" v-model.number="product.quantity" min="0" @input="updateQuantityAndClearSearch" placeholder="Cantidad">
       </div>
     </div>
 
@@ -418,8 +418,9 @@
         searchAndClear() {
           this.searchQuery = '';
         },
-        updateSummary() {
-          this.products = [...this.products];
+        updateQuantityAndClearSearch() {
+          this.searchQuery = ''; // Borra el texto de búsqueda al modificar una cantidad
+          this.products = [...this.products]; // Actualiza la lista de productos
         },
         async loadProductsFromJSON() {
           try {
@@ -472,14 +473,16 @@
           }
           try {
             console.log('Librería html2pdf cargada:', typeof html2pdf !== 'undefined');
+            // Clonar el contenido del modal para capturar datos renderizados
+            const contentToPrint = modalContent.cloneNode(true);
             html2pdf()
               .set({
                 margin: 10,
                 filename: 'resumen_pedido.pdf',
-                html2canvas: { scale: 2 },
+                html2canvas: { scale: 2, useCORS: true },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
               })
-              .from(modalContent)
+              .from(contentToPrint)
               .save()
               .then(() => {
                 console.log('PDF generado con éxito');
