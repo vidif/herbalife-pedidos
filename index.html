@@ -28,10 +28,32 @@
 
     h1 {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
       color: #003087;
       font-size: 2em;
       font-weight: 700;
+    }
+
+    .header-actions {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .header-actions button {
+      padding: 8px 15px;
+      background-color: #003087;
+      color: #ffffff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9em;
+      font-weight: 500;
+    }
+
+    .header-actions button:hover {
+      background-color: #d4a017;
     }
 
     .pv-total {
@@ -357,12 +379,21 @@
         width: 95%;
         max-height: 90vh;
       }
+
+      .header-actions {
+        flex-direction: column;
+        gap: 10px;
+      }
     }
   </style>
 </head>
 <body>
   <div id="app" class="container">
     <h1>Simulador de Pedidos Herbalife</h1>
+    <div class="header-actions">
+      <button @click="clearCart">Vaciar Carrito</button>
+      <button @click="scrollToSummary">Ver Resumen de Pedido</button>
+    </div>
     <div class="pv-total">Total P.V.: {{ totalPV.toFixed(2) }} P.V.</div>
 
     <div class="search-container">
@@ -395,7 +426,7 @@
       </div>
     </div>
 
-    <div class="summary">
+    <div class="summary" id="summary-section">
       <h2>Resumen del Pedido</h2>
       <p v-if="selectedProducts.length === 0">No hay productos seleccionados.</p>
       <p v-for="item in selectedProducts" :key="item.SKU">
@@ -467,6 +498,7 @@
           products: [], // Inicializamos como array vacío
           showModal: false,
           selectedProductSKUs: [], // Lista para rastrear los SKUs de productos seleccionados
+          emptyFieldTimeouts: {}, // Objeto para rastrear temporizadores de campos vacíos
         };
       },
       computed: {
@@ -474,7 +506,7 @@
           return [...new Set(this.products.map(product => product.CATEGORIA))];
         },
         filteredAndSearchedProducts() {
-          let categoryProducts = this.products.filter(product =>
+          let categoryProducts = this.products.filter((product) =>
             product.CATEGORIA === this.selectedCategory
           );
 
@@ -483,13 +515,13 @@
           }
 
           const searchTerm = this.removeAccents(this.searchQuery.toLowerCase().trim());
-          const searchResults = this.products.filter(product => {
+          const searchResults = this.products.filter((product) => {
             const fullName = `${product.NOMBRE_DEL_PRODUCTO} ${product.SABOR || ''}`;
             const normalizedFullName = this.removeAccents(fullName.toLowerCase());
             return normalizedFullName.includes(searchTerm);
           });
 
-          const remainingCategoryProducts = categoryProducts.filter(product => 
+          const remainingCategoryProducts = categoryProducts.filter((product) =>
             !searchResults.includes(product)
           );
 
@@ -497,7 +529,7 @@
         },
         selectedProducts() {
           // Mostrar productos que están en selectedProductSKUs
-          return this.products.filter(product => this.selectedProductSKUs.includes(product.SKU));
+          return this.products.filter((product) => this.selectedProductSKUs.includes(product.SKU));
         },
         totalPV() {
           return this.selectedProducts.reduce((sum, item) => sum + ((item.quantity || 0) * item.PV), 0);
@@ -544,17 +576,49 @@
           this.updateProductSelection(product);
         },
         updateQuantityInput(product) {
-          // Solo actualizar la cantidad sin procesar eliminación aún
-          if (product.quantity === null || product.quantity === undefined) {
-            product.quantity = 0; // Mantener 0 como valor predeterminado si está vacío
+          // Cancelar temporizador existente si lo hay
+          if (this.emptyFieldTimeouts[product.SKU]) {
+            clearTimeout(this.emptyFieldTimeouts[product.SKU]);
+            delete this.emptyFieldTimeouts[product.SKU];
+          }
+
+          // Si el campo está vacío, iniciar un temporizador de 30 segundos
+          if (product.quantity === null || product.quantity === undefined || product.quantity === '') {
+            console.log('Iniciando temporizador para SKU:', product.SKU); // Depuración
+            this.emptyFieldTimeouts[product.SKU] = setTimeout(() => {
+              console.log('Temporizador ejecutado para SKU:', product.SKU); // Depuración
+              this.removeProductAfterTimeout(product);
+            }, 30000); // 30 segundos
+          } else {
+            // Si el usuario ingresa un valor, actualizar selección inmediatamente
+            this.updateProductSelection(product);
+          }
+        },
+        removeProductAfterTimeout(product) {
+          console.log('Eliminando producto después de 30 segundos para SKU:', product.SKU); // Depuración
+          // Eliminar el producto del resumen y restablecer su cantidad a 0
+          const index = this.selectedProductSKUs.indexOf(product.SKU);
+          if (index !== -1) {
+            this.selectedProductSKUs.splice(index, 1);
+            product.quantity = 0; // Restablecer la cantidad a 0 en el tablero
+            this.updateSummary();
+            delete this.emptyFieldTimeouts[product.SKU]; // Limpiar el temporizador
           }
         },
         finalizeQuantityEdit(product) {
-          // Procesar la eliminación o selección al perder el foco o presionar Enter
-          if (product.quantity === 0) {
+          // Cancelar temporizador si el usuario termina de editar
+          if (this.emptyFieldTimeouts[product.SKU]) {
+            console.log('Cancelando temporizador para SKU:', product.SKU); // Depuración
+            clearTimeout(this.emptyFieldTimeouts[product.SKU]);
+            delete this.emptyFieldTimeouts[product.SKU];
+          }
+
+          // Procesar la eliminación o selección al perder el foco
+          if (product.quantity === 0 || product.quantity === null || product.quantity === undefined) {
             const index = this.selectedProductSKUs.indexOf(product.SKU);
             if (index !== -1) {
               this.selectedProductSKUs.splice(index, 1);
+              product.quantity = 0; // Asegurar que la cantidad sea 0
             }
           } else if (product.quantity > 0 && !this.selectedProductSKUs.includes(product.SKU)) {
             this.selectedProductSKUs.push(product.SKU);
@@ -565,7 +629,7 @@
           // Actualizar selección al usar botones o al finalizar edición
           if (product.quantity > 0 && !this.selectedProductSKUs.includes(product.SKU)) {
             this.selectedProductSKUs.push(product.SKU);
-          } else if (product.quantity === 0) {
+          } else if (product.quantity === 0 || product.quantity === null || product.quantity === undefined) {
             const index = this.selectedProductSKUs.indexOf(product.SKU);
             if (index !== -1) {
               this.selectedProductSKUs.splice(index, 1);
@@ -576,6 +640,26 @@
         updateSummary() {
           this.products = [...this.products]; // Forzar reactividad
         },
+        clearCart() {
+          // Limpiar todas las cantidades y el resumen
+          this.products.forEach((product) => {
+            product.quantity = 0;
+          });
+          this.selectedProductSKUs = [];
+          // Cancelar todos los temporizadores activos
+          Object.keys(this.emptyFieldTimeouts).forEach((sku) => {
+            clearTimeout(this.emptyFieldTimeouts[sku]);
+            delete this.emptyFieldTimeouts[sku];
+          });
+          this.updateSummary();
+        },
+        scrollToSummary() {
+          // Desplazar a la sección del resumen
+          const summarySection = document.getElementById('summary-section');
+          if (summarySection) {
+            summarySection.scrollIntoView({ behavior: 'smooth' });
+          }
+        },
         async loadProductsFromJSON() {
           try {
             const response = await fetch('products.json');
@@ -583,7 +667,7 @@
               throw new Error(`Error al cargar products.json: ${response.status} ${response.statusText}`);
             }
             const data = await response.json();
-            this.products = reactive(data.map(product => ({
+            this.products = reactive(data.map((product) => ({
               SKU: product.SKU || '',
               NOMBRE_DEL_PRODUCTO: product.NOMBRE_DEL_PRODUCTO || '',
               SABOR: product.SABOR || '',
@@ -611,6 +695,11 @@
         closeModal() {
           console.log('Cerrando modal');
           this.showModal = false;
+          // Cancelar todos los temporizadores al cerrar el modal
+          Object.keys(this.emptyFieldTimeouts).forEach((sku) => {
+            clearTimeout(this.emptyFieldTimeouts[sku]);
+            delete this.emptyFieldTimeouts[sku];
+          });
         },
         printModal() {
           window.print();
@@ -639,6 +728,10 @@
       beforeUnmount() {
         window.removeEventListener('popstate', this.handleBackNavigation);
         window.removeEventListener('beforeunload', this.handleBeforeUnload);
+        // Limpiar todos los temporizadores al desmontar el componente
+        Object.keys(this.emptyFieldTimeouts).forEach((sku) => {
+          clearTimeout(this.emptyFieldTimeouts[sku]);
+        });
       }
     }).mount('#app');
   </script>
