@@ -252,10 +252,25 @@
       border: none;
       border-radius: 5px;
       cursor: pointer;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
 
     .view-summary-btn:hover {
+      background-color: #d4a017;
+    }
+
+    .scroll-to-top-btn {
+      display: block;
+      padding: 10px 20px;
+      background-color: #003087;
+      color: #ffffff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+
+    .scroll-to-top-btn:hover {
       background-color: #d4a017;
     }
 
@@ -451,6 +466,7 @@
     </div>
 
     <button class="view-summary-btn" @click="openModal">Ver Resumen Detallado</button>
+    <button class="scroll-to-top-btn" @click="scrollToTop">Subir al Inicio</button>
 
     <!-- Modal -->
     <div v-if="showModal" class="modal">
@@ -503,7 +519,7 @@
       },
       computed: {
         categories() {
-          return [...new Set(this.products.map(product => product.CATEGORIA))];
+          return [...new Set(this.products.map((product) => product.CATEGORIA))];
         },
         filteredAndSearchedProducts() {
           let categoryProducts = this.products.filter((product) =>
@@ -587,22 +603,12 @@
             console.log('Iniciando temporizador para SKU:', product.SKU); // Depuración
             this.emptyFieldTimeouts[product.SKU] = setTimeout(() => {
               console.log('Temporizador ejecutado para SKU:', product.SKU); // Depuración
-              this.removeProductAfterTimeout(product);
+              product.quantity = 0; // Cambiar a 0 después de 30 segundos
+              this.updateProductSelection(product); // Actualizar selección para eliminar si es 0
             }, 30000); // 30 segundos
           } else {
             // Si el usuario ingresa un valor, actualizar selección inmediatamente
             this.updateProductSelection(product);
-          }
-        },
-        removeProductAfterTimeout(product) {
-          console.log('Eliminando producto después de 30 segundos para SKU:', product.SKU); // Depuración
-          // Eliminar el producto del resumen y restablecer su cantidad a 0
-          const index = this.selectedProductSKUs.indexOf(product.SKU);
-          if (index !== -1) {
-            this.selectedProductSKUs.splice(index, 1);
-            product.quantity = 0; // Restablecer la cantidad a 0 en el tablero
-            this.updateSummary();
-            delete this.emptyFieldTimeouts[product.SKU]; // Limpiar el temporizador
           }
         },
         finalizeQuantityEdit(product) {
@@ -659,6 +665,10 @@
           if (summarySection) {
             summarySection.scrollIntoView({ behavior: 'smooth' });
           }
+        },
+        scrollToTop() {
+          // Desplazar al inicio de la página
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         },
         async loadProductsFromJSON() {
           try {
