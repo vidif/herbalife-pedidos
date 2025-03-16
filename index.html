@@ -201,7 +201,7 @@
   </div>
 
   <script>
-    const { createApp } = Vue;
+    const { createApp, reactive } = Vue;
 
     createApp({
       data() {
@@ -209,7 +209,7 @@
           selectedCategory: 'BATIDOS',
           searchQuery: '',
           productsVisible: true,
-          products: []
+          products: [] // Inicializamos como array vacío
         };
       },
       computed: {
@@ -264,14 +264,18 @@
           this.searchQuery = '';
         },
         updateSummary() {
-          // No se necesita guardar en localStorage, solo actualizar el resumen
+          // Forzamos una actualización reactiva si es necesario
+          this.products = [...this.products];
         },
         async loadProductsFromJSON() {
           try {
             const response = await fetch('products.json');
-            if (!response.ok) throw new Error('No se pudo cargar products.json');
+            if (!response.ok) {
+              throw new Error(`Error al cargar products.json: ${response.status} ${response.statusText}`);
+            }
             const data = await response.json();
-            this.products = data.map(product => ({
+            // Aseguramos reactividad usando reactive
+            this.products = reactive(data.map(product => ({
               SKU: product.SKU || '',
               NOMBRE_DEL_PRODUCTO: product.NOMBRE_DEL_PRODUCTO || '',
               SABOR: product.SABOR || '',
@@ -281,11 +285,11 @@
               '0.25': parseFloat(product['0.25']) || 0,
               '0.35': parseFloat(product['0.35']) || 0,
               '0.42': parseFloat(product['0.42']) || 0,
-              '0.50': parseFloat(product['0.50']) || 0, // Usar '0.50' como clave
+              '0.50': parseFloat(product['0.50']) || 0,
               CATEGORIA: product.CATEGORIA || 'BATIDOS',
-              quantity: product.quantity || 0
-            }));
-            console.log('Productos cargados:', this.products); // Para depuración
+              quantity: parseInt(product.quantity, 10) || 0
+            })));
+            console.log('Productos cargados:', this.products);
           } catch (error) {
             console.error("Error al cargar products.json:", error);
           }
