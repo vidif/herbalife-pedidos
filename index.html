@@ -389,7 +389,7 @@
         <p><strong>Categoría:</strong> {{ product.CATEGORIA }}</p>
         <div class="quantity-control">
           <button @click="decreaseQuantity(product)">−</button>
-          <input type="number" v-model.number="product.quantity" min="0" @input="updateSummary" placeholder="Cantidad">
+          <input type="number" v-model.number="product.quantity" min="0" @input="updateProductSelection(product)" placeholder="Cantidad">
           <button @click="increaseQuantity(product)">+</button>
         </div>
       </div>
@@ -397,8 +397,8 @@
 
     <div class="summary">
       <h2>Resumen del Pedido</h2>
-      <p v-if="selectedItems.length === 0">No hay productos seleccionados.</p>
-      <p v-for="item in selectedItems" :key="item.SKU">
+      <p v-if="selectedProducts.length === 0">No hay productos seleccionados.</p>
+      <p v-for="item in selectedProducts" :key="item.SKU">
         <strong>{{ item.NOMBRE_DEL_PRODUCTO }} ({{ item.SABOR ? item.SABOR : 'Sin sabor' }})</strong> - 
         Cantidad: <input type="number" v-model.number="item.quantity" min="0" class="quantity-input" @input="updateSummary"> | 
         <strong>P.V. Total: {{ (item.quantity * item.PV).toFixed(2) }}</strong> | 
@@ -426,8 +426,8 @@
       <div class="modal-content">
         <span class="close-modal" @click="closeModal">×</span>
         <h2>Resumen del Pedido</h2>
-        <p v-if="selectedItems.length === 0">No hay productos seleccionados.</p>
-        <div v-for="item in selectedItems" :key="item.SKU" class="item-details">
+        <p v-if="selectedProducts.length === 0">No hay productos seleccionados.</p>
+        <div v-for="item in selectedProducts" :key="item.SKU" class="item-details">
           <p>
             <strong>{{ item.NOMBRE_DEL_PRODUCTO }} ({{ item.SABOR ? item.SABOR : 'Sin sabor' }})</strong> - 
             Cantidad: <input type="number" v-model.number="item.quantity" min="0" class="quantity-input" @input="updateSummary"> | 
@@ -465,7 +465,8 @@
           searchQuery: '',
           productsVisible: true,
           products: [], // Inicializamos como array vacío
-          showModal: false
+          showModal: false,
+          selectedProductSKUs: [], // Lista para rastrear los SKUs de productos seleccionados
         };
       },
       computed: {
@@ -482,44 +483,42 @@
           }
 
           const searchTerm = this.removeAccents(this.searchQuery.toLowerCase().trim());
-          // Buscar coincidencias en todos los productos (sin limitarse a la categoría)
           const searchResults = this.products.filter(product => {
             const fullName = `${product.NOMBRE_DEL_PRODUCTO} ${product.SABOR || ''}`;
             const normalizedFullName = this.removeAccents(fullName.toLowerCase());
             return normalizedFullName.includes(searchTerm);
           });
 
-          // Crear una lista de productos de la categoría excluyendo los que ya están en los resultados de búsqueda
           const remainingCategoryProducts = categoryProducts.filter(product => 
             !searchResults.includes(product)
           );
 
-          // Combinar los resultados de búsqueda al principio y los productos restantes de la categoría al final
           return [...searchResults, ...remainingCategoryProducts];
         },
-        selectedItems() {
-          return this.products.filter(product => product.quantity > 0);
+        selectedProducts() {
+          // Mostrar productos que alguna vez han sido seleccionados (incluso si la cantidad es 0)
+          return this.products.filter(product => this.selectedProductSKUs.includes(product.SKU));
         },
         totalPV() {
-          return this.selectedItems.reduce((sum, item) => sum + (item.quantity * item.PV), 0);
+          return this.selectedProducts.reduce((sum, item) => sum + ((item.quantity || 0) * item.PV), 0);
         },
         totalBase() {
-          return this.selectedItems.reduce((sum, item) => sum + (item.quantity * item.BASE_DE_GANANCIA), 0);
+          return this.selectedProducts.reduce((sum, item) => sum + ((item.quantity || 0) * item.BASE_DE_GANANCIA), 0);
         },
         totalSuggested() {
-          return this.selectedItems.reduce((sum, item) => sum + (item.quantity * item.PRECIO_DE_VENTA_SUGERIDO), 0);
+          return this.selectedProducts.reduce((sum, item) => sum + ((item.quantity || 0) * item.PRECIO_DE_VENTA_SUGERIDO), 0);
         },
         total025() {
-          return this.selectedItems.reduce((sum, item) => sum + (item.quantity * item['0.25']), 0);
+          return this.selectedProducts.reduce((sum, item) => sum + ((item.quantity || 0) * item['0.25']), 0);
         },
         total035() {
-          return this.selectedItems.reduce((sum, item) => sum + (item.quantity * item['0.35']), 0);
+          return this.selectedProducts.reduce((sum, item) => sum + ((item.quantity || 0) * item['0.35']), 0);
         },
         total042() {
-          return this.selectedItems.reduce((sum, item) => sum + (item.quantity * item['0.42']), 0);
+          return this.selectedProducts.reduce((sum, item) => sum + ((item.quantity || 0) * item['0.42']), 0);
         },
         total050() {
-          return this.selectedItems.reduce((sum, item) => sum + (item.quantity * item['0.50']), 0);
+          return this.selectedProducts.reduce((sum, item) => sum + ((item.quantity || 0) * item['0.50']), 0);
         }
       },
       methods: {
@@ -527,25 +526,32 @@
           return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         },
         toggleProductsAndClearSearch() {
-          this.searchQuery = ''; // Borra la búsqueda al cambiar de categoría
+          this.searchQuery = '';
           this.productsVisible = true;
         },
         searchAndClear() {
           this.searchQuery = '';
         },
         clearSearch() {
-          this.searchQuery = ''; // Borra la búsqueda al hacer clic en la "X" o en el botón
+          this.searchQuery = '';
         },
         increaseQuantity(product) {
           product.quantity = (product.quantity || 0) + 1;
-          this.updateSummary();
+          this.updateProductSelection(product);
         },
         decreaseQuantity(product) {
           product.quantity = Math.max(0, (product.quantity || 0) - 1);
+          this.updateProductSelection(product);
+        },
+        updateProductSelection(product) {
+          // Añadir el SKU del producto a selectedProductSKUs si la cantidad es mayor a 0
+          if (product.quantity > 0 && !this.selectedProductSKUs.includes(product.SKU)) {
+            this.selectedProductSKUs.push(product.SKU);
+          }
           this.updateSummary();
         },
         updateSummary() {
-          this.products = [...this.products]; // Actualiza la lista de productos para forzar reactividad
+          this.products = [...this.products]; // Forzar reactividad
         },
         async loadProductsFromJSON() {
           try {
@@ -576,6 +582,8 @@
         openModal() {
           console.log('Abriendo modal, showModal antes:', this.showModal);
           this.showModal = true;
+          // Añadir una entrada al historial para manejar el botón "Atrás"
+          history.pushState({ modalOpen: true }, document.title, window.location.href);
           console.log('showModal después:', this.showModal);
         },
         closeModal() {
@@ -585,23 +593,35 @@
         printModal() {
           window.print();
         },
-        handleBackNavigation() {
+        handleBeforeUnload(event) {
+          // Mostrar advertencia si hay productos seleccionados
+          if (this.selectedProductSKUs.length > 0) {
+            event.preventDefault();
+            event.returnValue = 'Tienes un pedido en curso. ¿Seguro que quieres salir y perder los datos?';
+            return event.returnValue;
+          }
+        },
+        handleBackNavigation(event) {
           if (this.showModal) {
             this.closeModal();
-            return false; // Evita el comportamiento predeterminado del navegador
+            // Evitar que el navegador retroceda
+            history.pushState({ modalOpen: false }, document.title, window.location.href);
           }
-          return true; // Permite la navegación hacia atrás si no hay modal abierto
         }
       },
       mounted() {
         this.loadProductsFromJSON();
         this.toggleProductsAndClearSearch();
-        window.addEventListener('popstate', () => {
-          if (!this.handleBackNavigation()) {
-            history.pushState(null, document.title, window.location.href); // Evita salir completamente
-          }
-        });
-        history.pushState(null, document.title, window.location.href); // Inicializa el historial
+        // Manejar el botón "Atrás"
+        window.addEventListener('popstate', this.handleBackNavigation);
+        // Inicializar el historial
+        history.pushState({ modalOpen: false }, document.title, window.location.href);
+        // Mostrar advertencia antes de salir de la página
+        window.addEventListener('beforeunload', this.handleBeforeUnload);
+      },
+      beforeUnmount() {
+        window.removeEventListener('popstate', this.handleBackNavigation);
+        window.removeEventListener('beforeunload', this.handleBeforeUnload);
       }
     }).mount('#app');
   </script>
