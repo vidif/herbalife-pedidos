@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Simulador de Pedidos Herbalife</title>
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     * {
@@ -45,14 +44,35 @@
       font-weight: 500;
     }
 
+    .search-container {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
     .search-bar {
       width: 100%;
-      padding: 10px;
-      margin-bottom: 20px;
+      padding: 10px 30px 10px 10px;
       border: 2px solid #003087;
       border-radius: 8px;
       background-color: #ffffff;
       color: #333;
+    }
+
+    .clear-search {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #003087;
+      font-size: 1.2em;
+      cursor: pointer;
+      display: none;
+    }
+
+    .clear-search.visible {
+      display: block;
     }
 
     .categories {
@@ -267,7 +287,10 @@
     <h1>Simulador de Pedidos Herbalife</h1>
     <div class="pv-total">Total P.V.: {{ totalPV.toFixed(2) }} P.V.</div>
 
-    <input v-model="searchQuery" type="text" class="search-bar" placeholder="Buscar por nombre de producto..." @keyup.enter="searchAndClear">
+    <div class="search-container">
+      <input v-model="searchQuery" type="text" class="search-bar" placeholder="Buscar por nombre de producto..." @keyup.enter="searchAndClear">
+      <button v-if="searchQuery" class="clear-search visible" @click="clearSearch">×</button>
+    </div>
     <div class="categories">
       <select v-model="selectedCategory" class="category-select" @change="toggleProductsAndClearSearch">
         <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
@@ -338,11 +361,10 @@
         <p><strong>Total Precio Sugerido:</strong> ${{ totalSuggested.toFixed(2) }}</p>
         <p><strong>Total 25%:</strong> ${{ total025.toFixed(2) }}</p>
         <p><strong>Total 35%:</strong> ${{ total035.toFixed(2) }}</p>
-        <p><strong>Total 42%:</strong> {{ total042.toFixed(2) }}</p>
+        <p><strong>Total 42%:</strong> ${{ total042.toFixed(2) }}</p>
         <p><strong>Total 50%:</strong> ${{ total050.toFixed(2) }}</p>
         <div class="modal-buttons">
           <button @click="printModal">Imprimir</button>
-          <button @click="downloadPDF">Guardar como PDF</button>
         </div>
       </div>
     </div>
@@ -419,6 +441,9 @@
         searchAndClear() {
           this.searchQuery = '';
         },
+        clearSearch() {
+          this.searchQuery = ''; // Borra la búsqueda al hacer clic en la "X"
+        },
         updateSummary() {
           this.products = [...this.products]; // Actualiza la lista de productos
         },
@@ -459,43 +484,6 @@
         },
         printModal() {
           window.print();
-        },
-        downloadPDF() {
-          console.log('Intentando descargar PDF...');
-          if (!this.showModal) {
-            console.error('El modal no está abierto. Abre el modal antes de intentar descargar el PDF.');
-            return;
-          }
-          const modalContent = document.querySelector('.modal-content');
-          if (!modalContent) {
-            console.error('No se encontró el elemento .modal-content');
-            return;
-          }
-          try {
-            console.log('Librería html2pdf cargada:', typeof html2pdf !== 'undefined');
-            // Clonar el contenido del modal
-            const contentToPrint = modalContent.cloneNode(true);
-            // Asegurar que el contenido esté renderizado con un retraso
-            setTimeout(() => {
-              html2pdf()
-                .set({
-                  margin: 10,
-                  filename: 'resumen_pedido.pdf',
-                  html2canvas: { scale: 2, useCORS: true },
-                  jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                })
-                .from(contentToPrint)
-                .save()
-                .then(() => {
-                  console.log('PDF generado con éxito');
-                })
-                .catch((error) => {
-                  console.error('Error al generar PDF:', error);
-                });
-            }, 500); // Retraso de 500ms para asegurar renderizado
-          } catch (error) {
-            console.error('Error al intentar usar html2pdf:', error);
-          }
         }
       },
       mounted() {
