@@ -276,6 +276,7 @@
 
     /* Modal Styles */
     .modal {
+      display: none; /* Mantener el modal en el DOM pero oculto por defecto */
       position: fixed;
       top: 0;
       left: 0;
@@ -283,11 +284,14 @@
       height: 100%;
       background-color: rgba(0, 0, 0, 0.5);
       z-index: 1000;
-      display: flex;
       justify-content: center;
       align-items: flex-start;
       padding-top: 20px;
       overflow-y: auto;
+    }
+
+    .modal.active {
+      display: flex;
     }
 
     .modal-content {
@@ -359,33 +363,28 @@
       background-color: #d4a017;
     }
 
+    /* Print Styles */
+    .print-content {
+      display: none; /* Oculto por defecto */
+    }
+
     @media print {
-      body {
-        display: block; /* Asegurar que el body sea visible */
-      }
       body * {
-        display: none; /* Ocultar todo excepto el modal */
+        display: none !important; /* Ocultar todo excepto el contenido de impresión */
       }
-      .modal,
-      .modal-content {
-        display: block !important; /* Forzar que el modal se muestre */
-        position: static; /* Quitar posición fija para impresión */
+      .print-content {
+        display: block !important; /* Mostrar solo el contenido de impresión */
+        position: absolute;
+        top: 0;
+        left: 0;
         width: 100%;
-        height: auto;
-        padding: 0;
+        padding: 20px;
         background-color: #fff;
         box-shadow: none;
-        max-height: none;
-        overflow: visible;
       }
-      .modal-content * {
-        display: block !important; /* Asegurar que todo dentro del modal se muestre */
-      }
-      .modal-buttons {
-        display: none;
-      }
-      .close-modal {
-        display: none;
+      .print-content h2,
+      .print-content p {
+        display: block !important;
       }
     }
 
@@ -479,7 +478,7 @@
     <button class="scroll-to-top-btn" @click="scrollToTop">Subir al Inicio</button>
 
     <!-- Modal -->
-    <div v-if="showModal" class="modal">
+    <div class="modal" :class="{ active: showModal }">
       <div class="modal-content">
         <span class="close-modal" @click="closeModal">×</span>
         <h2>Resumen del Pedido</h2>
@@ -509,6 +508,33 @@
           <button @click="printModal">Imprimir</button>
         </div>
       </div>
+    </div>
+
+    <!-- Contenido para impresión -->
+    <div class="print-content">
+      <h2>Resumen del Pedido (Impresión)</h2>
+      <p v-if="selectedProducts.length === 0">No hay productos seleccionados.</p>
+      <div v-for="item in selectedProducts" :key="item.SKU" class="item-details">
+        <p>
+          <strong>{{ item.NOMBRE_DEL_PRODUCTO }} ({{ item.SABOR ? item.SABOR : 'Sin sabor' }})</strong> - 
+          Cantidad: {{ item.quantity }} | 
+          <strong>P.V. Total: {{ (item.quantity || 0) * item.PV.toFixed(2) }}</strong> | 
+          Base Ganancia: ${{ (item.quantity || 0) * item.BASE_DE_GANANCIA.toFixed(2) }} | 
+          Precio Sug.: ${{ (item.quantity || 0) * item.PRECIO_DE_VENTA_SUGERIDO.toFixed(2) }} | 
+          25%: ${{ (item.quantity || 0) * item['0.25'].toFixed(2) }} | 
+          35%: ${{ (item.quantity || 0) * item['0.35'].toFixed(2) }} | 
+          42%: ${{ (item.quantity || 0) * item['0.42'].toFixed(2) }} | 
+          50%: ${{ (item.quantity || 0) * item['0.50'].toFixed(2) }}
+        </p>
+      </div>
+      <h3>Totales Generales:</h3>
+      <p><strong>Puntos de Volumen Total:</strong> {{ totalPV.toFixed(2) }} P.V.</p>
+      <p><strong>Total Base de Ganancia:</strong> ${{ totalBase.toFixed(2) }}</p>
+      <p><strong>Total Precio Sugerido:</strong> ${{ totalSuggested.toFixed(2) }}</p>
+      <p><strong>Total 25%:</strong> ${{ total025.toFixed(2) }}</p>
+      <p><strong>Total 35%:</strong> ${{ total035.toFixed(2) }}</p>
+      <p><strong>Total 42%:</strong> ${{ total042.toFixed(2) }}</p>
+      <p><strong>Total 50%:</strong> ${{ total050.toFixed(2) }}</p>
     </div>
   </div>
 
@@ -715,10 +741,9 @@
           });
         },
         printModal() {
-          console.log('Iniciando impresión, selectedProducts:', this.selectedProducts, 'Total PV:', this.totalPV); // Depuración
-          this.showModal = true; // Asegurar que el modal esté abierto
-          this.$nextTick(() => { // Esperar a que el DOM se actualice
-            console.log('DOM actualizado, iniciando impresión'); // Depuración
+          console.log('Iniciando impresión, selectedProducts:', this.selectedProducts, 'Total PV:', this.totalPV);
+          this.$nextTick(() => {
+            console.log('DOM actualizado, iniciando impresión');
             window.print();
           });
         },
