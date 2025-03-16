@@ -293,8 +293,8 @@
       <h2>Resumen del Pedido</h2>
       <p v-if="selectedItems.length === 0">No hay productos seleccionados.</p>
       <p v-for="item in selectedItems" :key="item.SKU">
-        {{ item.NOMBRE_DEL_PRODUCTO }} ({{ item.SABOR ? item.SABOR : 'Sin sabor' }}) - Cantidad: {{ item.quantity }} | 
-        P.V. Total: {{ (item.quantity * item.PV).toFixed(2) }} | 
+        <strong>{{ item.NOMBRE_DEL_PRODUCTO }} ({{ item.SABOR ? item.SABOR : 'Sin sabor' }})</strong> - Cantidad: <strong>{{ item.quantity }}</strong> | 
+        P.V. Total: <strong>{{ (item.quantity * item.PV).toFixed(2) }}</strong> | 
         Base Ganancia: ${{ (item.quantity * item.BASE_DE_GANANCIA).toFixed(2) }} | 
         Precio Sug.: ${{ (item.quantity * item.PRECIO_DE_VENTA_SUGERIDO).toFixed(2) }} | 
         25%: ${{ (item.quantity * item['0.25']).toFixed(2) }} | 
@@ -322,8 +322,8 @@
         <p v-if="selectedItems.length === 0">No hay productos seleccionados.</p>
         <div v-for="item in selectedItems" :key="item.SKU" class="item-details">
           <p>
-            {{ item.NOMBRE_DEL_PRODUCTO }} ({{ item.SABOR ? item.SABOR : 'Sin sabor' }}) - Cantidad: {{ item.quantity }} | 
-            P.V. Total: {{ (item.quantity * item.PV).toFixed(2) }} | 
+            <strong>{{ item.NOMBRE_DEL_PRODUCTO }} ({{ item.SABOR ? item.SABOR : 'Sin sabor' }})</strong> - Cantidad: <strong>{{ item.quantity }}</strong> | 
+            P.V. Total: <strong>{{ (item.quantity * item.PV).toFixed(2) }}</strong> | 
             Base Ganancia: ${{ (item.quantity * item.BASE_DE_GANANCIA).toFixed(2) }} | 
             Precio Sug.: ${{ (item.quantity * item.PRECIO_DE_VENTA_SUGERIDO).toFixed(2) }} | 
             25%: ${{ (item.quantity * item['0.25']).toFixed(2) }} | 
@@ -460,8 +460,22 @@
           window.print();
         },
         downloadPDF() {
+          console.log('Intentando descargar PDF...');
           const modalContent = this.$el.querySelector('.modal-content');
-          html2pdf().from(modalContent).save('resumen_pedido.pdf');
+          if (modalContent) {
+            html2pdf().set({
+              margin: 10,
+              filename: 'resumen_pedido.pdf',
+              html2canvas: { scale: 2 },
+              jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).from(modalContent).save().then(() => {
+              console.log('PDF generado con éxito');
+            }).catch((error) => {
+              console.error('Error al generar PDF:', error);
+            });
+          } else {
+            console.error('No se encontró el elemento .modal-content');
+          }
         }
       },
       mounted() {
