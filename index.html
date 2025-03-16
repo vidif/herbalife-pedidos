@@ -130,6 +130,7 @@
       border-radius: 8px;
       border: 1px solid #003087;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
     }
 
     .summary h2 {
@@ -144,12 +145,62 @@
       color: #555;
     }
 
-    .print-buttons {
-      margin-top: 10px;
+    .view-summary-btn {
+      display: block;
+      padding: 10px 20px;
+      background-color: #003087;
+      color: #ffffff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+
+    .view-summary-btn:hover {
+      background-color: #d4a017;
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background-color: #fff;
+      margin: 5% auto;
+      padding: 20px;
+      border-radius: 8px;
+      width: 80%;
+      max-width: 600px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+
+    .modal-content h2 {
+      margin-bottom: 15px;
+      color: #003087;
+      font-weight: 500;
+    }
+
+    .modal-content p {
+      margin-bottom: 8px;
+      font-size: 0.9em;
+      color: #555;
+    }
+
+    .modal-buttons {
+      margin-top: 20px;
       text-align: right;
     }
 
-    .print-buttons button {
+    .modal-buttons button {
       padding: 8px 15px;
       background-color: #003087;
       color: #ffffff;
@@ -159,18 +210,36 @@
       margin-left: 10px;
     }
 
-    .print-buttons button:hover {
+    .modal-buttons button:hover {
       background-color: #d4a017;
     }
 
+    .close-modal {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 1.5em;
+      cursor: pointer;
+      color: #333;
+    }
+
     @media print {
-      .no-print {
-        display: none !important;
+      body * {
+        visibility: hidden;
       }
-      .summary {
-        border: none;
-        box-shadow: none;
-        padding: 0;
+      .modal, .modal-content {
+        visibility: visible;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: auto;
+      }
+      .modal-content * {
+        visibility: visible;
+      }
+      .modal-buttons {
+        display: none;
       }
     }
 
@@ -183,6 +252,11 @@
 
       h1 {
         font-size: 1.5em;
+      }
+
+      .modal-content {
+        width: 90%;
+        margin: 10% auto;
       }
     }
   </style>
@@ -216,27 +290,49 @@
 
     <div class="summary">
       <h2>Resumen del Pedido</h2>
-      <div v-for="item in selectedItems" :key="item.SKU" class="item-details">
-        <p><strong>Producto:</strong> {{ item.NOMBRE_DEL_PRODUCTO }} ({{ item.SABOR ? item.SABOR : 'Sin sabor' }}) - Cantidad: {{ item.quantity }}</p>
-        <p><strong>P.V. Total:</strong> {{ (item.quantity * item.PV).toFixed(2) }} P.V.</p>
-        <p><strong>Base de Ganancia Total:</strong> ${{ (item.quantity * item.BASE_DE_GANANCIA).toFixed(2) }}</p>
-        <p><strong>Precio Sugerido Total:</strong> ${{ (item.quantity * item.PRECIO_DE_VENTA_SUGERIDO).toFixed(2) }}</p>
-        <p><strong>Total 25%:</strong> ${{ (item.quantity * item['0.25']).toFixed(2) }}</p>
-        <p><strong>Total 35%:</strong> ${{ (item.quantity * item['0.35']).toFixed(2) }}</p>
-        <p><strong>Total 42%:</strong> ${{ (item.quantity * item['0.42']).toFixed(2) }}</p>
-        <p><strong>Total 50%:</strong> ${{ (item.quantity * item['0.50']).toFixed(2) }}</p>
-      </div>
+      <p v-if="selectedItems.length === 0">No hay productos seleccionados.</p>
+      <p v-for="item in selectedItems" :key="item.SKU">
+        {{ item.NOMBRE_DEL_PRODUCTO }} ({{ item.SABOR ? item.SABOR : 'Sin sabor' }}) - Cantidad: {{ item.quantity }} | 
+        P.V. Total: {{ (item.quantity * item.PV).toFixed(2) }} | 
+        50%: ${{ (item.quantity * item['0.50']).toFixed(2) }}
+      </p>
       <h3>Totales Generales:</h3>
       <p><strong>Puntos de Volumen Total:</strong> {{ totalPV.toFixed(2) }} P.V.</p>
-      <p><strong>Total Base de Ganancia:</strong> ${{ totalBase.toFixed(2) }}</p>
-      <p><strong>Total Precio Sugerido:</strong> ${{ totalSuggested.toFixed(2) }}</p>
-      <p><strong>Total 25%:</strong> ${{ total025.toFixed(2) }}</p>
-      <p><strong>Total 35%:</strong> ${{ total035.toFixed(2) }}</p>
-      <p><strong>Total 42%:</strong> ${{ total042.toFixed(2) }}</p>
       <p><strong>Total 50%:</strong> ${{ total050.toFixed(2) }}</p>
-      <div class="print-buttons no-print">
-        <button @click="printSummary">Imprimir</button>
-        <button @click="downloadPDF">Guardar como PDF</button>
+    </div>
+
+    <button class="view-summary-btn" @click="showModal = true">Ver Resumen Detallado</button>
+
+    <!-- Modal -->
+    <div v-if="showModal" class="modal">
+      <div class="modal-content">
+        <span class="close-modal" @click="showModal = false">&times;</span>
+        <h2>Resumen del Pedido</h2>
+        <p v-if="selectedItems.length === 0">No hay productos seleccionados.</p>
+        <div v-for="item in selectedItems" :key="item.SKU" class="item-details">
+          <p>
+            {{ item.NOMBRE_DEL_PRODUCTO }} ({{ item.SABOR ? item.SABOR : 'Sin sabor' }}) - Cantidad: {{ item.quantity }} | 
+            P.V. Total: {{ (item.quantity * item.PV).toFixed(2) }} | 
+            Base Ganancia: ${{ (item.quantity * item.BASE_DE_GANANCIA).toFixed(2) }} | 
+            Precio Sug.: ${{ (item.quantity * item.PRECIO_DE_VENTA_SUGERIDO).toFixed(2) }} | 
+            25%: ${{ (item.quantity * item['0.25']).toFixed(2) }} | 
+            35%: ${{ (item.quantity * item['0.35']).toFixed(2) }} | 
+            42%: ${{ (item.quantity * item['0.42']).toFixed(2) }} | 
+            50%: ${{ (item.quantity * item['0.50']).toFixed(2) }}
+          </p>
+        </div>
+        <h3>Totales Generales:</h3>
+        <p><strong>Puntos de Volumen Total:</strong> {{ totalPV.toFixed(2) }} P.V.</p>
+        <p><strong>Total Base de Ganancia:</strong> ${{ totalBase.toFixed(2) }}</p>
+        <p><strong>Total Precio Sugerido:</strong> ${{ totalSuggested.toFixed(2) }}</p>
+        <p><strong>Total 25%:</strong> ${{ total025.toFixed(2) }}</p>
+        <p><strong>Total 35%:</strong> ${{ total035.toFixed(2) }}</p>
+        <p><strong>Total 42%:</strong> ${{ total042.toFixed(2) }}</p>
+        <p><strong>Total 50%:</strong> ${{ total050.toFixed(2) }}</p>
+        <div class="modal-buttons">
+          <button @click="printModal">Imprimir</button>
+          <button @click="downloadPDF">Guardar como PDF</button>
+        </div>
       </div>
     </div>
   </div>
@@ -250,7 +346,8 @@
           selectedCategory: 'BATIDOS',
           searchQuery: '',
           productsVisible: true,
-          products: [] // Inicializamos como array vacío
+          products: [], // Inicializamos como array vacío
+          showModal: false
         };
       },
       computed: {
@@ -301,7 +398,6 @@
         }
       },
       methods: {
-        // Método para eliminar acentos de una cadena
         removeAccents(str) {
           return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         },
@@ -312,7 +408,6 @@
           this.searchQuery = '';
         },
         updateSummary() {
-          // Forzamos una actualización reactiva si es necesario
           this.products = [...this.products];
         },
         async loadProductsFromJSON() {
@@ -322,7 +417,6 @@
               throw new Error(`Error al cargar products.json: ${response.status} ${response.statusText}`);
             }
             const data = await response.json();
-            // Aseguramos reactividad usando reactive
             this.products = reactive(data.map(product => ({
               SKU: product.SKU || '',
               NOMBRE_DEL_PRODUCTO: product.NOMBRE_DEL_PRODUCTO || '',
@@ -342,12 +436,12 @@
             console.error("Error al cargar products.json:", error);
           }
         },
-        printSummary() {
+        printModal() {
           window.print();
         },
         downloadPDF() {
-          const summaryElement = this.$el.querySelector('.summary');
-          html2pdf().from(summaryElement).save('resumen_pedido.pdf');
+          const modalContent = this.$el.querySelector('.modal-content');
+          html2pdf().from(modalContent).save('resumen_pedido.pdf');
         }
       },
       mounted() {
