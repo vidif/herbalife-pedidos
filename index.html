@@ -7,7 +7,357 @@
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    /* [Estilos existentes sin cambios para brevity] */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Roboto', sans-serif;
+    }
+
+    body {
+      background-color: #ffffff;
+      color: #333;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #003087;
+      font-size: 2em;
+      font-weight: 700;
+    }
+
+    .pv-total {
+      text-align: center;
+      padding: 10px;
+      background-color: #e9ecef;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      color: #003087;
+      font-weight: 500;
+    }
+
+    .search-container {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .search-bar {
+      width: 100%;
+      padding: 10px 30px 10px 10px;
+      border: 2px solid #003087;
+      border-radius: 8px;
+      background-color: #ffffff;
+      color: #333;
+    }
+
+    .clear-search {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #003087;
+      font-size: 1.2em;
+      cursor: pointer;
+      display: none;
+    }
+
+    .clear-search.visible {
+      display: block;
+    }
+
+    .clear-search-btn {
+      display: block;
+      margin: 5px auto 0;
+      padding: 5px 10px;
+      background-color: #003087;
+      color: #ffffff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9em;
+      display: none;
+    }
+
+    .clear-search-btn.visible {
+      display: block;
+    }
+
+    .clear-search-btn:hover {
+      background-color: #d4a017;
+    }
+
+    .categories {
+      margin-bottom: 20px;
+    }
+
+    .category-select {
+      width: 100%;
+      padding: 12px;
+      background-color: #e9ecef;
+      border: 2px solid #003087;
+      border-radius: 8px;
+      color: #003087;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .category-select option {
+      background-color: #ffffff;
+      color: #333;
+    }
+
+    .products {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+      overflow-y: auto;
+    }
+
+    .products.active {
+      display: grid;
+    }
+
+    .product {
+      background-color: #e9ecef;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #003087;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .product h3 {
+      font-size: 1.1em;
+      margin-bottom: 10px;
+      color: #003087;
+      font-weight: 500;
+    }
+
+    .product p {
+      margin-bottom: 5px;
+      font-size: 0.9em;
+      color: #555;
+    }
+
+    .quantity-control {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 10px;
+    }
+
+    .quantity-control input {
+      width: 50px;
+      padding: 8px;
+      background-color: #ffffff;
+      color: #333;
+      border: 1px solid #003087;
+      border-radius: 5px;
+      text-align: center;
+      transition: border-color 0.3s;
+    }
+
+    .quantity-control input:focus {
+      border-color: #d4a017;
+      outline: none;
+    }
+
+    .quantity-control button {
+      width: 30px;
+      height: 30px;
+      background-color: #003087;
+      color: #ffffff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .quantity-control button:hover {
+      background-color: #d4a017;
+    }
+
+    .summary {
+      background-color: #e9ecef;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid #003087;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    .summary h2 {
+      margin-bottom: 15px;
+      color: #003087;
+      font-weight: 500;
+    }
+
+    .summary p {
+      margin-bottom: 8px;
+      font-size: 0.9em;
+      color: #555;
+    }
+
+    .summary .quantity-input {
+      width: 50px;
+      padding: 5px;
+      background-color: #ffffff;
+      color: #333;
+      border: 1px solid #003087;
+      border-radius: 5px;
+      text-align: center;
+      margin-left: 5px;
+    }
+
+    .view-summary-btn {
+      display: block;
+      padding: 10px 20px;
+      background-color: #003087;
+      color: #ffffff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+
+    .view-summary-btn:hover {
+      background-color: #d4a017;
+    }
+
+    /* Modal Styles */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding-top: 20px;
+      overflow-y: auto;
+    }
+
+    .modal-content {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      position: relative;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal-content h2 {
+      margin-bottom: 15px;
+      color: #003087;
+      font-weight: 500;
+    }
+
+    .modal-content p {
+      margin-bottom: 8px;
+      font-size: 0.9em;
+      color: #555;
+    }
+
+    .modal-content .quantity-input {
+      width: 50px;
+      padding: 5px;
+      background-color: #ffffff;
+      color: #333;
+      border: 1px solid #003087;
+      border-radius: 5px;
+      text-align: center;
+      margin-left: 5px;
+    }
+
+    .close-modal {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 1.5em;
+      cursor: pointer;
+      color: #333;
+      z-index: 1001;
+    }
+
+    .modal-buttons {
+      margin-top: 20px;
+      text-align: right;
+      position: sticky;
+      bottom: 10px;
+      background-color: #fff;
+      padding-top: 10px;
+      border-top: 1px solid #e9ecef;
+    }
+
+    .modal-buttons button {
+      padding: 8px 15px;
+      background-color: #003087;
+      color: #ffffff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+
+    .modal-buttons button:hover {
+      background-color: #d4a017;
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      .modal, .modal-content {
+        visibility: visible;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: auto;
+      }
+      .modal-content * {
+        visibility: visible;
+      }
+      .modal-buttons {
+        display: none;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .products {
+        grid-template-columns: 1fr;
+        max-height: none;
+        overflow-y: visible;
+      }
+
+      h1 {
+        font-size: 1.5em;
+      }
+
+      .modal-content {
+        width: 95%;
+        max-height: 90vh;
+      }
+    }
   </style>
 </head>
 <body>
@@ -39,7 +389,7 @@
         <p><strong>Categoría:</strong> {{ product.CATEGORIA }}</p>
         <div class="quantity-control">
           <button @click="decreaseQuantity(product)">−</button>
-          <input type="number" v-model.number="product.quantity" min="0" @change="updateProductSelection(product)" placeholder="Cantidad">
+          <input type="number" v-model.number="product.quantity" min="0" @input="updateProductSelection(product)" placeholder="Cantidad">
           <button @click="increaseQuantity(product)">+</button>
         </div>
       </div>
@@ -50,7 +400,7 @@
       <p v-if="selectedProducts.length === 0">No hay productos seleccionados.</p>
       <p v-for="item in selectedProducts" :key="item.SKU">
         <strong>{{ item.NOMBRE_DEL_PRODUCTO }} ({{ item.SABOR ? item.SABOR : 'Sin sabor' }})</strong> - 
-        Cantidad: <input type="number" v-model.number="item.quantity" min="0" class="quantity-input" @change="updateProductSelection(item)"> | 
+        Cantidad: <input type="number" v-model.number="item.quantity" min="0" class="quantity-input" @input="updateSummary"> | 
         <strong>P.V. Total: {{ (item.quantity * item.PV).toFixed(2) }}</strong> | 
         Base Ganancia: ${{ (item.quantity * item.BASE_DE_GANANCIA).toFixed(2) }} | 
         Precio Sug.: ${{ (item.quantity * item.PRECIO_DE_VENTA_SUGERIDO).toFixed(2) }} | 
@@ -80,7 +430,7 @@
         <div v-for="item in selectedProducts" :key="item.SKU" class="item-details">
           <p>
             <strong>{{ item.NOMBRE_DEL_PRODUCTO }} ({{ item.SABOR ? item.SABOR : 'Sin sabor' }})</strong> - 
-            Cantidad: <input type="number" v-model.number="item.quantity" min="0" class="quantity-input" @change="updateProductSelection(item)"> | 
+            Cantidad: <input type="number" v-model.number="item.quantity" min="0" class="quantity-input" @input="updateSummary"> | 
             <strong>P.V. Total: {{ (item.quantity * item.PV).toFixed(2) }}</strong> | 
             Base Ganancia: ${{ (item.quantity * item.BASE_DE_GANANCIA).toFixed(2) }} | 
             Precio Sug.: ${{ (item.quantity * item.PRECIO_DE_VENTA_SUGERIDO).toFixed(2) }} | 
@@ -146,9 +496,8 @@
           return [...searchResults, ...remainingCategoryProducts];
         },
         selectedProducts() {
-          return this.products
-            .filter(product => this.selectedProductSKUs.includes(product.SKU))
-            .sort((a, b) => a.SKU.localeCompare(b.SKU));
+          // Mostrar productos que alguna vez han sido seleccionados (incluso si la cantidad es 0)
+          return this.products.filter(product => this.selectedProductSKUs.includes(product.SKU));
         },
         totalPV() {
           return this.selectedProducts.reduce((sum, item) => sum + ((item.quantity || 0) * item.PV), 0);
@@ -179,15 +528,12 @@
         toggleProductsAndClearSearch() {
           this.searchQuery = '';
           this.productsVisible = true;
-          this.$forceUpdate(); // Forzar actualización para asegurar que los productos se muestren
         },
         searchAndClear() {
           this.searchQuery = '';
-          this.$forceUpdate(); // Forzar actualización
         },
         clearSearch() {
           this.searchQuery = '';
-          this.$forceUpdate(); // Forzar actualización
         },
         increaseQuantity(product) {
           product.quantity = (product.quantity || 0) + 1;
@@ -198,12 +544,11 @@
           this.updateProductSelection(product);
         },
         updateProductSelection(product) {
-          if (product.quantity === 0) {
-            this.selectedProductSKUs = this.selectedProductSKUs.filter(sku => sku !== product.SKU);
-          } else if (product.quantity > 0 && !this.selectedProductSKUs.includes(product.SKU)) {
+          // Añadir el SKU del producto a selectedProductSKUs si la cantidad es mayor a 0
+          if (product.quantity > 0 && !this.selectedProductSKUs.includes(product.SKU)) {
             this.selectedProductSKUs.push(product.SKU);
           }
-          this.$forceUpdate(); // Forzar actualización para reflejar cambios
+          this.updateSummary();
         },
         updateSummary() {
           this.products = [...this.products]; // Forzar reactividad
@@ -235,16 +580,21 @@
           }
         },
         openModal() {
+          console.log('Abriendo modal, showModal antes:', this.showModal);
           this.showModal = true;
+          // Añadir una entrada al historial para manejar el botón "Atrás"
           history.pushState({ modalOpen: true }, document.title, window.location.href);
+          console.log('showModal después:', this.showModal);
         },
         closeModal() {
+          console.log('Cerrando modal');
           this.showModal = false;
         },
         printModal() {
           window.print();
         },
         handleBeforeUnload(event) {
+          // Mostrar advertencia si hay productos seleccionados
           if (this.selectedProductSKUs.length > 0) {
             event.preventDefault();
             event.returnValue = 'Tienes un pedido en curso. ¿Seguro que quieres salir y perder los datos?';
@@ -254,6 +604,7 @@
         handleBackNavigation(event) {
           if (this.showModal) {
             this.closeModal();
+            // Evitar que el navegador retroceda
             history.pushState({ modalOpen: false }, document.title, window.location.href);
           }
         }
@@ -261,8 +612,11 @@
       mounted() {
         this.loadProductsFromJSON();
         this.toggleProductsAndClearSearch();
+        // Manejar el botón "Atrás"
         window.addEventListener('popstate', this.handleBackNavigation);
+        // Inicializar el historial
         history.pushState({ modalOpen: false }, document.title, window.location.href);
+        // Mostrar advertencia antes de salir de la página
         window.addEventListener('beforeunload', this.handleBeforeUnload);
       },
       beforeUnmount() {
