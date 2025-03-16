@@ -294,10 +294,20 @@
       <p v-for="item in selectedItems" :key="item.SKU">
         {{ item.NOMBRE_DEL_PRODUCTO }} ({{ item.SABOR ? item.SABOR : 'Sin sabor' }}) - Cantidad: {{ item.quantity }} | 
         P.V. Total: {{ (item.quantity * item.PV).toFixed(2) }} | 
+        Base Ganancia: ${{ (item.quantity * item.BASE_DE_GANANCIA).toFixed(2) }} | 
+        Precio Sug.: ${{ (item.quantity * item.PRECIO_DE_VENTA_SUGERIDO).toFixed(2) }} | 
+        25%: ${{ (item.quantity * item['0.25']).toFixed(2) }} | 
+        35%: ${{ (item.quantity * item['0.35']).toFixed(2) }} | 
+        42%: ${{ (item.quantity * item['0.42']).toFixed(2) }} | 
         50%: ${{ (item.quantity * item['0.50']).toFixed(2) }}
       </p>
       <h3>Totales Generales:</h3>
       <p><strong>Puntos de Volumen Total:</strong> {{ totalPV.toFixed(2) }} P.V.</p>
+      <p><strong>Total Base de Ganancia:</strong> ${{ totalBase.toFixed(2) }}</p>
+      <p><strong>Total Precio Sugerido:</strong> ${{ totalSuggested.toFixed(2) }}</p>
+      <p><strong>Total 25%:</strong> ${{ total025.toFixed(2) }}</p>
+      <p><strong>Total 35%:</strong> ${{ total035.toFixed(2) }}</p>
+      <p><strong>Total 42%:</strong> ${{ total042.toFixed(2) }}</p>
       <p><strong>Total 50%:</strong> ${{ total050.toFixed(2) }}</p>
     </div>
 
@@ -306,7 +316,7 @@
     <!-- Modal -->
     <div v-if="showModal" class="modal">
       <div class="modal-content">
-        <span class="close-modal" @click="showModal = false">&times;</span>
+        <span class="close-modal" @click="showModal = false">×</span>
         <h2>Resumen del Pedido</h2>
         <p v-if="selectedItems.length === 0">No hay productos seleccionados.</p>
         <div v-for="item in selectedItems" :key="item.SKU" class="item-details">
