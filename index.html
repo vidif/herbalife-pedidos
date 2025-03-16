@@ -606,21 +606,14 @@
               product.quantity = 0; // Cambiar a 0 después de 30 segundos
               this.updateProductSelection(product); // Actualizar selección para eliminar si es 0
             }, 30000); // 30 segundos
-          } else {
-            // Si el usuario ingresa un valor, actualizar selección inmediatamente
+          } else if (product.quantity > 0) {
+            // Si el usuario ingresa un valor mayor a 0, actualizar selección inmediatamente
             this.updateProductSelection(product);
           }
         },
         finalizeQuantityEdit(product) {
-          // Cancelar temporizador si el usuario termina de editar
-          if (this.emptyFieldTimeouts[product.SKU]) {
-            console.log('Cancelando temporizador para SKU:', product.SKU); // Depuración
-            clearTimeout(this.emptyFieldTimeouts[product.SKU]);
-            delete this.emptyFieldTimeouts[product.SKU];
-          }
-
-          // Procesar la eliminación o selección al perder el foco
-          if (product.quantity === 0 || product.quantity === null || product.quantity === undefined) {
+          // No cancelar el temporizador si el campo está vacío, permitir que continúe
+          if (product.quantity === 0) {
             const index = this.selectedProductSKUs.indexOf(product.SKU);
             if (index !== -1) {
               this.selectedProductSKUs.splice(index, 1);
