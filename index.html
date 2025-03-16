@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Simulador de Pedidos Herbalife</title>
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     * {
@@ -143,6 +144,36 @@
       color: #555;
     }
 
+    .print-buttons {
+      margin-top: 10px;
+      text-align: right;
+    }
+
+    .print-buttons button {
+      padding: 8px 15px;
+      background-color: #003087;
+      color: #ffffff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+
+    .print-buttons button:hover {
+      background-color: #d4a017;
+    }
+
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+      .summary {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+      }
+    }
+
     @media (max-width: 768px) {
       .products {
         grid-template-columns: 1fr;
@@ -185,11 +216,17 @@
 
     <div class="summary">
       <h2>Resumen del Pedido</h2>
-      <div v-for="item in selectedItems" :key="item.SKU">
-        <p>{{ item.NOMBRE_DEL_PRODUCTO }} ({{ item.SABOR ? item.SABOR : 'Sin sabor' }}) - Cantidad: {{ item.quantity }}</p>
-        <p>P.V. Total: {{ (item.quantity * item.PV).toFixed(2) }}</p>
+      <div v-for="item in selectedItems" :key="item.SKU" class="item-details">
+        <p><strong>Producto:</strong> {{ item.NOMBRE_DEL_PRODUCTO }} ({{ item.SABOR ? item.SABOR : 'Sin sabor' }}) - Cantidad: {{ item.quantity }}</p>
+        <p><strong>P.V. Total:</strong> {{ (item.quantity * item.PV).toFixed(2) }} P.V.</p>
+        <p><strong>Base de Ganancia Total:</strong> ${{ (item.quantity * item.BASE_DE_GANANCIA).toFixed(2) }}</p>
+        <p><strong>Precio Sugerido Total:</strong> ${{ (item.quantity * item.PRECIO_DE_VENTA_SUGERIDO).toFixed(2) }}</p>
+        <p><strong>Total 25%:</strong> ${{ (item.quantity * item['0.25']).toFixed(2) }}</p>
+        <p><strong>Total 35%:</strong> ${{ (item.quantity * item['0.35']).toFixed(2) }}</p>
+        <p><strong>Total 42%:</strong> ${{ (item.quantity * item['0.42']).toFixed(2) }}</p>
+        <p><strong>Total 50%:</strong> ${{ (item.quantity * item['0.50']).toFixed(2) }}</p>
       </div>
-      <h3>Totales:</h3>
+      <h3>Totales Generales:</h3>
       <p><strong>Puntos de Volumen Total:</strong> {{ totalPV.toFixed(2) }} P.V.</p>
       <p><strong>Total Base de Ganancia:</strong> ${{ totalBase.toFixed(2) }}</p>
       <p><strong>Total Precio Sugerido:</strong> ${{ totalSuggested.toFixed(2) }}</p>
@@ -197,6 +234,10 @@
       <p><strong>Total 35%:</strong> ${{ total035.toFixed(2) }}</p>
       <p><strong>Total 42%:</strong> ${{ total042.toFixed(2) }}</p>
       <p><strong>Total 50%:</strong> ${{ total050.toFixed(2) }}</p>
+      <div class="print-buttons no-print">
+        <button @click="printSummary">Imprimir</button>
+        <button @click="downloadPDF">Guardar como PDF</button>
+      </div>
     </div>
   </div>
 
@@ -300,6 +341,13 @@
           } catch (error) {
             console.error("Error al cargar products.json:", error);
           }
+        },
+        printSummary() {
+          window.print();
+        },
+        downloadPDF() {
+          const summaryElement = this.$el.querySelector('.summary');
+          html2pdf().from(summaryElement).save('resumen_pedido.pdf');
         }
       },
       mounted() {
