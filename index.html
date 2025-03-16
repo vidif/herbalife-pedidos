@@ -248,17 +248,21 @@
       z-index: 1000;
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start;
+      padding-top: 20px;
+      overflow-y: auto;
     }
 
     .modal-content {
       background-color: #fff;
       padding: 20px;
       border-radius: 8px;
-      width: 80%;
+      width: 90%;
       max-width: 600px;
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
       position: relative;
+      max-height: 80vh;
+      overflow-y: auto;
     }
 
     .modal-content h2 {
@@ -284,9 +288,24 @@
       margin-left: 5px;
     }
 
+    .close-modal {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 1.5em;
+      cursor: pointer;
+      color: #333;
+      z-index: 1001;
+    }
+
     .modal-buttons {
       margin-top: 20px;
       text-align: right;
+      position: sticky;
+      bottom: 10px;
+      background-color: #fff;
+      padding-top: 10px;
+      border-top: 1px solid #e9ecef;
     }
 
     .modal-buttons button {
@@ -301,15 +320,6 @@
 
     .modal-buttons button:hover {
       background-color: #d4a017;
-    }
-
-    .close-modal {
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      font-size: 1.5em;
-      cursor: pointer;
-      color: #333;
     }
 
     @media print {
@@ -344,8 +354,8 @@
       }
 
       .modal-content {
-        width: 90%;
-        margin: 10% auto;
+        width: 95%;
+        max-height: 90vh;
       }
     }
   </style>
@@ -574,11 +584,24 @@
         },
         printModal() {
           window.print();
+        },
+        handleBackNavigation() {
+          if (this.showModal) {
+            this.closeModal();
+            return false; // Evita el comportamiento predeterminado del navegador
+          }
+          return true; // Permite la navegación hacia atrás si no hay modal abierto
         }
       },
       mounted() {
         this.loadProductsFromJSON();
         this.toggleProductsAndClearSearch();
+        window.addEventListener('popstate', () => {
+          if (!this.handleBackNavigation()) {
+            history.pushState(null, document.title, window.location.href); // Evita salir completamente
+          }
+        });
+        history.pushState(null, document.title, window.location.href); // Inicializa el historial
       }
     }).mount('#app');
   </script>
