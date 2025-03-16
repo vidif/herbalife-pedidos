@@ -400,7 +400,7 @@
       <p v-if="selectedProducts.length === 0">No hay productos seleccionados.</p>
       <p v-for="item in selectedProducts" :key="item.SKU">
         <strong>{{ item.NOMBRE_DEL_PRODUCTO }} ({{ item.SABOR ? item.SABOR : 'Sin sabor' }})</strong> - 
-        Cantidad: <input type="number" v-model.number="item.quantity" min="0" class="quantity-input" @change="updateProductSelection(item)"> | 
+        Cantidad: <input type="number" v-model.number="item.quantity" min="0" class="quantity-input" @input="updateSummary"> | 
         <strong>P.V. Total: {{ (item.quantity * item.PV).toFixed(2) }}</strong> | 
         Base Ganancia: ${{ (item.quantity * item.BASE_DE_GANANCIA).toFixed(2) }} | 
         Precio Sug.: ${{ (item.quantity * item.PRECIO_DE_VENTA_SUGERIDO).toFixed(2) }} | 
@@ -430,7 +430,7 @@
         <div v-for="item in selectedProducts" :key="item.SKU" class="item-details">
           <p>
             <strong>{{ item.NOMBRE_DEL_PRODUCTO }} ({{ item.SABOR ? item.SABOR : 'Sin sabor' }})</strong> - 
-            Cantidad: <input type="number" v-model.number="item.quantity" min="0" class="quantity-input" @change="updateProductSelection(item)"> | 
+            Cantidad: <input type="number" v-model.number="item.quantity" min="0" class="quantity-input" @input="updateSummary"> | 
             <strong>P.V. Total: {{ (item.quantity * item.PV).toFixed(2) }}</strong> | 
             Base Ganancia: ${{ (item.quantity * item.BASE_DE_GANANCIA).toFixed(2) }} | 
             Precio Sug.: ${{ (item.quantity * item.PRECIO_DE_VENTA_SUGERIDO).toFixed(2) }} | 
@@ -496,10 +496,8 @@
           return [...searchResults, ...remainingCategoryProducts];
         },
         selectedProducts() {
-          // Mostrar productos que están en selectedProductSKUs (incluso si la cantidad es 0)
-          return this.products
-            .filter(product => this.selectedProductSKUs.includes(product.SKU))
-            .sort((a, b) => a.SKU.localeCompare(b.SKU)); // Ordenar para consistencia
+          // Mostrar productos que alguna vez han sido seleccionados (incluso si la cantidad es 0)
+          return this.products.filter(product => this.selectedProductSKUs.includes(product.SKU));
         },
         totalPV() {
           return this.selectedProducts.reduce((sum, item) => sum + ((item.quantity || 0) * item.PV), 0);
@@ -546,11 +544,8 @@
           this.updateProductSelection(product);
         },
         updateProductSelection(product) {
-          // Si la cantidad es explícitamente 0, eliminar el producto de selectedProductSKUs
-          if (product.quantity === 0) {
-            this.selectedProductSKUs = this.selectedProductSKUs.filter(sku => sku !== product.SKU);
-          } else if (product.quantity > 0 && !this.selectedProductSKUs.includes(product.SKU)) {
-            // Añadir el SKU si la cantidad es mayor a 0 y no está en la lista
+          // Añadir el SKU del producto a selectedProductSKUs si la cantidad es mayor a 0
+          if (product.quantity > 0 && !this.selectedProductSKUs.includes(product.SKU)) {
             this.selectedProductSKUs.push(product.SKU);
           }
           this.updateSummary();
@@ -587,6 +582,7 @@
         openModal() {
           console.log('Abriendo modal, showModal antes:', this.showModal);
           this.showModal = true;
+          // Añadir una entrada al historial para manejar el botón "Atrás"
           history.pushState({ modalOpen: true }, document.title, window.location.href);
           console.log('showModal después:', this.showModal);
         },
@@ -598,6 +594,7 @@
           window.print();
         },
         handleBeforeUnload(event) {
+          // Mostrar advertencia si hay productos seleccionados
           if (this.selectedProductSKUs.length > 0) {
             event.preventDefault();
             event.returnValue = 'Tienes un pedido en curso. ¿Seguro que quieres salir y perder los datos?';
@@ -607,6 +604,7 @@
         handleBackNavigation(event) {
           if (this.showModal) {
             this.closeModal();
+            // Evitar que el navegador retroceda
             history.pushState({ modalOpen: false }, document.title, window.location.href);
           }
         }
@@ -614,8 +612,11 @@
       mounted() {
         this.loadProductsFromJSON();
         this.toggleProductsAndClearSearch();
+        // Manejar el botón "Atrás"
         window.addEventListener('popstate', this.handleBackNavigation);
+        // Inicializar el historial
         history.pushState({ modalOpen: false }, document.title, window.location.href);
+        // Mostrar advertencia antes de salir de la página
         window.addEventListener('beforeunload', this.handleBeforeUnload);
       },
       beforeUnmount() {
