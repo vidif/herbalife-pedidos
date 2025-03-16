@@ -363,19 +363,27 @@
       body * {
         visibility: hidden;
       }
-      .modal, .modal-content {
+      .modal,
+      .modal-content {
         visibility: visible;
         position: absolute;
         left: 0;
         top: 0;
         width: 100%;
         height: auto;
+        display: block !important; /* Asegurar que el modal se muestre */
       }
       .modal-content * {
         visibility: visible;
       }
       .modal-buttons {
         display: none;
+      }
+      .modal-content {
+        box-shadow: none; /* Eliminar sombra en impresión */
+        padding: 20px;
+        max-height: none; /* Permitir que el contenido se extienda */
+        overflow: visible; /* Evitar recorte */
       }
     }
 
@@ -705,6 +713,8 @@
           });
         },
         printModal() {
+          console.log('Imprimiendo resumen:', this.selectedProducts, 'Total PV:', this.totalPV); // Depuración
+          this.updateSummary(); // Forzar actualización del DOM
           window.print();
         },
         handleBeforeUnload(event) {
