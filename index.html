@@ -339,16 +339,6 @@
       z-index: 1001;
     }
 
-    .modal-buttons {
-      margin-top: 20px;
-      text-align: right;
-      position: sticky;
-      bottom: 10px;
-      background-color: #fff;
-      padding-top: 10px;
-      border-top: 1px solid #e9ecef;
-    }
-
     @media (max-width: 768px) {
       .products {
         grid-template-columns: 1fr;
@@ -377,7 +367,7 @@
     <h1>Simulador de Pedidos Herbalife</h1>
     <div class="header-actions">
       <button @click="clearCart">Vaciar Carrito</button>
-      <button @click="scrollToSummary">Ver Resumen de Pedido</button>
+      <button @click="openModal">Ver Resumen Detallado</button>
     </div>
     <div class="pv-total">Total P.V.: {{ totalPV.toFixed(2) }} P.V.</div>
 
@@ -465,9 +455,6 @@
         <p><strong>Total 35%:</strong> ${{ total035.toFixed(2) }}</p>
         <p><strong>Total 42%:</strong> ${{ total042.toFixed(2) }}</p>
         <p><strong>Total 50%:</strong> ${{ total050.toFixed(2) }}</p>
-        <div class="modal-buttons">
-          <!-- Botón Imprimir eliminado -->
-        </div>
       </div>
     </div>
   </div>
@@ -621,13 +608,6 @@
             delete this.emptyFieldTimeouts[sku];
           });
           this.updateSummary();
-        },
-        scrollToSummary() {
-          // Desplazar a la sección del resumen
-          const summarySection = document.getElementById('summary-section');
-          if (summarySection) {
-            summarySection.scrollIntoView({ behavior: 'smooth' });
-          }
         },
         scrollToTop() {
           // Desplazar al inicio de la página
