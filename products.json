@@ -182,6 +182,20 @@
     "quantity": 0
   },
   {
+    "SKU": "442K",
+    "NOMBRE_DEL_PRODUCTO": "Porciones individuales Herbal Aloe Concentrado (30 porciones)",
+    "SABOR": "15 ml Mandarina",
+    "PV": 24.15,
+    "BASE_DE_GANANCIA": 482.64,
+    "PRECIO_DE_VENTA_SUGERIDO": 781,
+    "0.25": 640.26,
+    "0.35": 584.28,
+    "0.42": 545.09,
+    "0.50": 500.3,
+    "CATEGORIA": "BEBIDAS DE ALOE",
+    "quantity": 0
+  },
+  {
     "SKU": 1610,
     "NOMBRE_DEL_PRODUCTO": "Herbal Aloe Concentrado",
     "SABOR": "473 ml Uva",
@@ -364,6 +378,20 @@
     "quantity": 0
   },
   {
+    "SKU": "483K",
+    "NOMBRE_DEL_PRODUCTO": "Porciones individuales Thermojetics Concentrado de Hierbas (15 porciones)",
+    "SABOR": "1.7 g Original",
+    "PV": 10.15,
+    "BASE_DE_GANANCIA": 228.38,
+    "PRECIO_DE_VENTA_SUGERIDO": 276,
+    "0.25": 218.64,
+    "0.35": 195.8,
+    "0.42": 179.81,
+    "0.50": 161.54,
+    "CATEGORIA": "TÉS",
+    "quantity": 0
+  },
+  {
     "SKU": 1638,
     "NOMBRE_DEL_PRODUCTO": "Thermojetics Concentrado de Hierbas",
     "SABOR": "51 g Chai",
@@ -420,6 +448,20 @@
     "quantity": 0
   },
   {
+    "SKU": "491K",
+    "NOMBRE_DEL_PRODUCTO": "Porciones individuales N-R-G Té (15 porciones)",
+    "SABOR": "1 g Original",
+    "PV": 3.95,
+    "BASE_DE_GANANCIA": 88.55,
+    "PRECIO_DE_VENTA_SUGERIDO": 125,
+    "0.25": 102.25,
+    "0.35": 93.4,
+    "0.42": 87.2,
+    "0.50": 80.12,
+    "CATEGORIA": "TÉS",
+    "quantity": 0
+  },
+  {
     "SKU": 2131,
     "NOMBRE_DEL_PRODUCTO": "N-R-G Té",
     "SABOR": "60 g Manzana Verde",
@@ -431,6 +473,20 @@
     "0.42": 228.91,
     "0.50": 202.32,
     "CATEGORIA": "TÉS",
+    "quantity": 0
+  },
+  {
+    "SKU": "494K",
+    "NOMBRE_DEL_PRODUCTO": "Café Instántaneo",
+    "SABOR": "",
+    "PV": 7.35,
+    "BASE_DE_GANANCIA": 173.97,
+    "PRECIO_DE_VENTA_SUGERIDO": 290,
+    "0.25": 246.45,
+    "0.35": 229.05,
+    "0.42": 216.87,
+    "0.50": 202.96,
+    "CATEGORIA": "CAFÉ",
     "quantity": 0
   },
   {
